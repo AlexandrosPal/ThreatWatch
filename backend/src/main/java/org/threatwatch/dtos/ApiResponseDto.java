@@ -1,4 +1,4 @@
-package org.threatwatch.threatwatch.dtos;
+package org.threatwatch.dtos;
 
 import java.time.Instant;
 

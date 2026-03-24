@@ -1,12 +1,13 @@
-package org.threatwatch.threatwatch.controllers;
+package org.threatwatch.controllers;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.threatwatch.threatwatch.dtos.ApiResponseDto;
-import org.threatwatch.threatwatch.dtos.SettingsResponseDto;
-import org.threatwatch.threatwatch.services.SettingsService;
+import org.threatwatch.dtos.ApiResponseDto;
+import org.threatwatch.dtos.SettingsResponseDto;
+import org.threatwatch.services.SettingsService;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -22,21 +23,27 @@ public class SettingsController {
     }
 
     @GetMapping
-    public ApiResponseDto retrieveSettings() {
+    public ResponseEntity<ApiResponseDto> retrieveSettings() {
 
         SettingsResponseDto currentSettings = settingsService.getSettings();
 
-        return new ApiResponseDto(
+        return ResponseEntity.ok(new ApiResponseDto(
                 Instant.now(),
                 UUID.randomUUID().toString(),
                 "ok",
                 currentSettings
-        );
+        ));
     }
 
     @PatchMapping
-    public ApiResponseDto updateSettings() {
-        return new ApiResponseDto();
+    public ResponseEntity<ApiResponseDto> updateSettings() {
+
+        return ResponseEntity.ok(new ApiResponseDto(
+                Instant.now(),
+                UUID.randomUUID().toString(),
+                "ok",
+                "Settings updated"
+        ));
     }
 
 }
