@@ -24,29 +24,31 @@ public class DynamicScheduler {
     }
 
     @PostConstruct
-    public void start() {
+    public void start() throws Exception {
         scheduleNextRun();
     }
 
-    private void scheduleNextRun() {
+    private void scheduleNextRun() throws Exception {
 
         Integer delay = Integer.valueOf(settingsService.retrieveSettings().getBatchInterval());
         Boolean enabled = Boolean.valueOf(settingsService.retrieveSettings().getEnabled());
 
         batchJobService.executeScheduledRun();
 
-        if (enabled) {
-            executor.schedule(() -> {
-                try {
+        executor.schedule(() -> {
+            try {
+                if (enabled) {
                     batchJobService.executeScheduledRun();
-                } finally {
-                    scheduleNextRun();
                 }
-            }, delay, TimeUnit.SECONDS);
-        } else {
-            executor.schedule(() -> {
-                scheduleNextRun();
-            }, delay, TimeUnit.SECONDS);
-        }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            } finally {
+                try {
+                    scheduleNextRun();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }, delay, TimeUnit.SECONDS);
     }
 }

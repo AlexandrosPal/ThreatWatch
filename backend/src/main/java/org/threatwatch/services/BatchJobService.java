@@ -6,6 +6,7 @@ import tools.jackson.databind.JsonNode;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.Set;
 
 @Service
 public class BatchJobService {
@@ -14,15 +15,17 @@ public class BatchJobService {
     private final SettingsService settingsService;
     private final ProductsService productService;
     private final NvdRestService nvdRestService;
+    private final CveParserService cveParserService;
 
-    public BatchJobService(EmailService emailService, SettingsService settingsService, ProductsService productService, NvdRestService nvdRestService) {
+    public BatchJobService(EmailService emailService, SettingsService settingsService, ProductsService productService, NvdRestService nvdRestService, CveParserService cveParserService) {
         this.emailService = emailService;
         this.settingsService = settingsService;
         this.productService = productService;
         this.nvdRestService = nvdRestService;
+        this.cveParserService = cveParserService;
     }
 
-    public void executeScheduledRun() {
+    public void executeScheduledRun() throws Exception {
 
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter
                 .ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
@@ -34,22 +37,54 @@ public class BatchJobService {
 
         String publishEndDatetime = dateTimeFormatter.format(rawPublishEndDatetime);
         String publishStartDatetime = dateTimeFormatter.format(rawPublishStartDatetime);
+        Set<String> products = productService.getProducts().keySet();
 
-        String product = "nginx";
+        StringBuilder cveListHtml = new StringBuilder();
+        String html = emailService.loadHtmlTemplate();
+        Set<String> emails = settingsService.retrieveSettings().getEmails();
 
-        JsonNode response = nvdRestService.getRecentVulnerabilitiesByProduct(product, publishStartDatetime, publishEndDatetime);
+        for (String product : products) {
+            String productLower = product.toLowerCase();
+            JsonNode response = nvdRestService.getRecentVulnerabilitiesByProduct(productLower, publishStartDatetime, publishEndDatetime);
 
-        JsonNode vulnerabilities = response.get("vulnerabilities");
+            JsonNode vulnerabilities = response.get("vulnerabilities");
 
-        for (JsonNode vuln : vulnerabilities) {
-            JsonNode cve = vuln.get("cve");
+            for (JsonNode vulnerabilitie : vulnerabilities) {
+                JsonNode cve = vulnerabilitie.get("cve");
 
-            String id = cve.get("id").asString();
+                cveParserService.parseCve(cve);
+                String cveId = cveParserService.getCveId();
+                String description = cveParserService.getDescription();
+                String severity = cveParserService.getSeverity();
+                String score = cveParserService.getScore();
+                String publicedAt = cveParserService.getPublished();
 
-            System.out.println(id);
+                String color = switch (severity) {
+                    case "CRITICAL" -> "#b60205";
+                    case "HIGH" -> "#d73a49";
+                    case "MEDIUM" -> "#fb8500";
+                    case "LOW" -> "#2da44e";
+                    default -> "#6c757d";
+                };
+
+                cveListHtml.append("""
+                        <div style="border:1px solid #e1e4e8; border-radius:6px; padding:12px; margin-bottom:12px;">
+                            <div style="font-weight:bold; font-size:14px;">
+                                %s  |  %s
+                                <span style="background:%s; color:white; padding:2px 6px; border-radius:4px; font-size:11px; margin-left:8px;">%s</span>
+                                <span style="padding-left:5px;">%s</span>
+                            </div>
+                            <div style="font-size:12px; color:#555; margin-top:4px;">
+                                Published: %s
+                            </div>
+                            <div style="font-size:13px; margin-top:8px;">
+                                %s
+                            </div>
+                        </div>
+                        """.formatted(product, cveId, color, severity, score, publicedAt, description));
+            }
         }
-
-//        Set<String> emails = settingsService.retrieveSettings().getEmails();
-//        emailService.sendEmail(emails, "Hello", "hello");
+        html = html.replace("{{cveList}}", cveListHtml.toString());
+        emailService.sendHtmlEmail(emails, "New Vulnerabilities Report", html);
     }
 }
