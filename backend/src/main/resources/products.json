@@ -1,0 +1,224 @@
+{
+  "MongoDB": [
+    {
+      "part": "a",
+      "vendor": "mongodb",
+      "product": "mongodb",
+      "displayName": "MongoDB: Server"
+    },
+    {
+      "part": "a",
+      "vendor": "mongodb",
+      "product": "kubernetes_operator",
+      "displayName": "MongoDB: Kubernetes Operator"
+    },
+    {
+      "part": "a",
+      "vendor": "mongodb",
+      "product": "bson",
+      "displayName": "MongoDB: BSON"
+    },
+    {
+      "part": "a",
+      "vendor": "mongodb",
+      "product": "mongodb_enterprise_kubernetes_operator",
+      "displayName": "MongoDB: Enterprise Kubernetes Operator"
+    },
+    {
+      "part": "a",
+      "vendor": "mongodb",
+      "product": "c_driver",
+      "displayName": "MongoDB: C Driver"
+    },
+    {
+      "part": "a",
+      "vendor": "mongodb",
+      "product": "ops_manager",
+      "displayName": "MongoDB: Ops Manager"
+    },
+    {
+      "part": "a",
+      "vendor": "mongodb",
+      "product": "java_driver",
+      "displayName": "MongoDB: Java Driver"
+    },
+    {
+      "part": "a",
+      "vendor": "mongodb",
+      "product": "compass",
+      "displayName": "MongoDB: Compass"
+    },
+    {
+      "part": "a",
+      "vendor": "mongodb",
+      "product": "database_tools",
+      "displayName": "MongoDB: Database Tools"
+    },
+    {
+      "part": "a",
+      "vendor": "mongodb",
+      "product": "c\\#_driver",
+      "displayName": "MongoDB: C# Driver"
+    },
+    {
+      "part": "a",
+      "vendor": "mongodb",
+      "product": "go_driver",
+      "displayName": "MongoDB: GO Driver"
+    },
+    {
+      "part": "a",
+      "vendor": "mongodb",
+      "product": "ruby_driver",
+      "displayName": "MongoDB: Ruby Driver"
+    },
+    {
+      "part": "a",
+      "vendor": "mongodb",
+      "product": "rust_driver",
+      "displayName": "MongoDB: Rust Driver"
+    },
+    {
+      "part": "a",
+      "vendor": "mongodb",
+      "product": "python_driver",
+      "displayName": "MongoDB: Python dRIVER"
+    },
+    {
+      "part": "a",
+      "vendor": "mongodb",
+      "product": "php_driver",
+      "displayName": "MongoDB: PHP Driver"
+    },
+    {
+      "part": "a",
+      "vendor": "mongodb",
+      "product": "atlas_kubernetes_operator",
+      "displayName": "MongoDB: Atlas Kubernetes Operator"
+    },
+    {
+      "part": "a",
+      "vendor": "mongodb",
+      "product": "mongosh",
+      "displayName": "MongoDB: Shell"
+    }
+  ],
+  "MySQL": [
+    {
+      "part": "a",
+      "vendor": "mysql",
+      "product": "mysql",
+      "displayName": "MySQL: Server"
+    },
+    {
+      "part": "a",
+      "vendor": "mysql",
+      "product": "mysql_community_server",
+      "displayName": "MySQL: Community Server"
+    },
+    {
+      "part": "a",
+      "vendor": "mysql",
+      "product": "mysql_connector\\/odbc",
+      "displayName": "MySQL: ODBC Connector"
+    },
+    {
+      "part": "a",
+      "vendor": "mysql",
+      "product": "mysql_tools",
+      "displayName": "MySQL: MySQL Tools"
+    },
+    {
+      "part": "a",
+      "vendor": "mysql",
+      "product": "mysql_workbench",
+      "displayName": "MySQL: WorkBench"
+    }
+  ],
+  "PostgreSQL": [
+    {
+      "part": "a",
+      "vendor": "postgresql",
+      "product": "postgresql",
+      "displayName": "PostgreSQL: Server"
+    },
+    {
+      "part": "a",
+      "vendor": "postgresql",
+      "product": "psqlodbc",
+      "displayName": "PostgreSQL: ODBC Driver"
+    },
+    {
+      "part": "a",
+      "vendor": "postgresql",
+      "product": "postgresql_jdbc_driver",
+      "displayName": "PostgreSQL: JDBC Driver"
+    },
+    {
+      "part": "a",
+      "vendor": "postgresql",
+      "product": "pgadmin_4",
+      "displayName": "PostgreSQL: pgAdmin 4"
+    }
+  ],
+  "Redis": [
+    {
+      "part": "a",
+      "vendor": "redis",
+      "product": "redis",
+      "displayName": "Redis: Server"
+    },
+    {
+      "part": "a",
+      "vendor": "redis",
+      "product": "redis_enterprise",
+      "displayName": "Redis: Enterprise"
+    },
+    {
+      "part": "a",
+      "vendor": "redis",
+      "product": "redis-py",
+      "displayName": "Redis: redis-py"
+    },
+    {
+      "part": "a",
+      "vendor": "redis",
+      "product": "redisraft",
+      "displayName": "Redis: redisraft"
+    }
+  ],
+  "Apache": [
+    {
+      "part": "a",
+      "vendor": "apache",
+      "product": "http_server",
+      "displayName": "Apache: HTTP Server"
+    },
+    {
+      "part": "a",
+      "vendor": "apache",
+      "product": "kafka",
+      "displayName": "Apache: Kafka"
+    }
+  ],
+  "NGINX": [
+    {
+      "part": "a",
+      "vendor": "nginx",
+      "product": "nginx",
+      "displayName": "NGINX: Server"
+    },
+    {
+      "part": "a",
+      "vendor": "nginx",
+      "product": "unit",
+      "displayName": "NGINX: Unit"
+    },
+    {
+      "part": "a",
+      "vendor": "nginx",
+      "product": "njs",
+      "displayName": "NGINX: NJS"
+    }
+  ]
+}

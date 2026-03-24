@@ -33,6 +33,8 @@ public class DynamicScheduler {
         Integer delay = Integer.valueOf(settingsService.retrieveSettings().getBatchInterval());
         Boolean enabled = Boolean.valueOf(settingsService.retrieveSettings().getEnabled());
 
+        batchJobService.executeScheduledRun();
+
         if (enabled) {
             executor.schedule(() -> {
                 try {
