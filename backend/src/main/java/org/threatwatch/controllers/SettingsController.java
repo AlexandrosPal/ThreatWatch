@@ -4,9 +4,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.threatwatch.dtos.ApiResponseDto;
 import org.threatwatch.dtos.SettingsResponseDto;
+import org.threatwatch.dtos.SettingsRequestDto;
 import org.threatwatch.services.SettingsService;
 
 import java.time.Instant;
@@ -23,9 +25,9 @@ public class SettingsController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponseDto> retrieveSettings() {
+    public ResponseEntity<ApiResponseDto> getSettings() {
 
-        SettingsResponseDto currentSettings = settingsService.getSettings();
+        SettingsResponseDto currentSettings = settingsService.retrieveSettings();
 
         return ResponseEntity.ok(new ApiResponseDto(
                 Instant.now(),
@@ -36,9 +38,11 @@ public class SettingsController {
     }
 
     @PatchMapping
-    public ResponseEntity<ApiResponseDto> updateSettings() {
+    public ResponseEntity<ApiResponseDto> patchSettings(@RequestBody SettingsRequestDto request) {
 
-        return ResponseEntity.ok(new ApiResponseDto(
+        settingsService.updateSettings(request);
+
+        return ResponseEntity.accepted().body(new ApiResponseDto(
                 Instant.now(),
                 UUID.randomUUID().toString(),
                 "ok",
