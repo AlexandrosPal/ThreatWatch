@@ -11,6 +11,7 @@ public class SettingsRequestDto {
     private NotificationTypes notificationType;
     private String enabled;
     private String productAddition;
+    private String severityThreshold;
 
     public Integer getBatchInterval() { return batchInterval; }
 
@@ -21,4 +22,6 @@ public class SettingsRequestDto {
     public String getEnabled() { return this.enabled; }
 
     public String getProductAddition() { return this.productAddition; }
+
+    public String getSeverityThreshold() {return severityThreshold; }
 }

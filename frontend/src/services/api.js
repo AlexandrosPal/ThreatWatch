@@ -20,5 +20,5 @@ export async function patchSettings(data) {
   if (!res.ok) throw new Error("Failed to update settings");
 
   const json = await res.json();
-  return json.data;
+  return json.response;
 }

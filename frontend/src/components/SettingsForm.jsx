@@ -16,6 +16,27 @@ function formatHoursFromMinutes(minutes) {
   return `= ${days.toFixed(2)} d`;
 }
 
+function getSeverityMeta(score) {
+  const num = Number(score);
+
+  if (isNaN(num) || num <= 0) {
+    return { label: "NONE", color: "#98a2b3" };
+  }
+
+  let label;
+  if (num < 4.0) label = "LOW";
+  else if (num < 7.0) label = "MEDIUM";
+  else if (num < 9.0) label = "HIGH";
+  else label = "CRITICAL";
+
+  const percent = num / 10;
+  const hue = (1 - percent) * 120;
+
+  const color = `hsl(${hue}, 70%, 45%)`;
+
+  return { label, color };
+}
+
 export default function SettingsForm() {
   const [batchIntervalMinutes, setBatchIntervalMinutes] = useState("");
   const [emails, setEmails] = useState([]);
@@ -29,14 +50,24 @@ export default function SettingsForm() {
   const [savingProduct, setSavingProduct] = useState(false);
   const [enabled, setEnabled] = useState(false);
   const [savingEnabled, setSavingEnabled] = useState(false);
+  const [minimumSeverityScore, setMinimumSeverityScore] = useState("7.0");
+  const [savingSeverity, setSavingSeverity] = useState(false);
+  const [batchSaved, setBatchSaved] = useState(false);
+  const [severitySaved, setSeveritySaved] = useState(false);
+
+  const percent = (minimumSeverityScore / 10) * 100;
+  const color = getSeverityMeta(minimumSeverityScore).color;
 
   useEffect(() => {
     loadSettings();
   }, []);
 
-  async function loadSettings() {
+  async function loadSettings(showPageLoader = false) {
     try {
-      setLoading(true);
+      if (showPageLoader) {
+        setLoading(true);
+      }
+      
       const data = await getSettings();
 
       const seconds = Number(data?.batchInterval || 0);
@@ -46,6 +77,8 @@ export default function SettingsForm() {
       setEmails(data?.emails || []);
       setSupportedProducts(data?.supportedProducts || []);
       setSelectedProducts(data?.productsSelected || []);
+      setEnabled(String(data?.enabled).toLowerCase() === "true");
+      setMinimumSeverityScore(data?.severityThreshold || "7.0");
     } catch (err) {
       console.error(err);
       alert("Failed to load settings");
@@ -53,6 +86,11 @@ export default function SettingsForm() {
       setLoading(false);
     }
   }
+
+  function flashSaved(setter) {
+    setter(true);
+    setTimeout(() => setter(false), 1200);
+   }
 
   async function handleToggleEnabled() {
     try {
@@ -156,6 +194,24 @@ export default function SettingsForm() {
       alert("Failed to remove product");
     } finally {
       setSavingProduct(false);
+    }
+  }
+
+  async function handleSaveSeverity() {
+    try {
+        setSavingSeverity(true);
+
+        await patchSettings({
+        severityThreshold: String(minimumSeverityScore),
+        });
+
+        await loadSettings();
+        flashSaved(setSeveritySaved);
+    } catch (err) {
+        console.error(err);
+        alert("Failed to save severity filter");
+    } finally {
+        setSavingSeverity(false);
     }
   }
 
@@ -321,6 +377,62 @@ export default function SettingsForm() {
             >
             <span className="toggle-thumb"></span>
             </button>
+        </div>
+      </section>
+      <section className="card">
+        <div className="card-header">
+            <div>
+            <h2>Severity Threshold</h2>
+            <p>Only send alerts above the selected CVSS threshold.</p>
+            </div>
+        </div>
+
+        <div className="severity-card-content">
+            <input
+                type="range"
+                min="0"
+                max="10"
+                step="0.1"
+                value={minimumSeverityScore}
+                onChange={(e) => setMinimumSeverityScore(e.target.value)}
+                className="severity-slider"
+                style={{
+                    background: `linear-gradient(to right, ${color} 0%, ${color} ${percent}%, #e5e7eb ${percent}%, #e5e7eb 100%)`
+                }}
+            />
+
+            <div className="severity-meta-row">
+            <div
+                className="severity-badge"
+                style={{ backgroundColor: getSeverityMeta(minimumSeverityScore).color }}
+            >
+                {getSeverityMeta(minimumSeverityScore).label}
+            </div>
+
+            <span className="severity-score">
+                {Number(minimumSeverityScore).toFixed(1)}
+            </span>
+            </div>
+
+            <div className="severity-footer">
+            <span className="muted-text">0.0</span>
+            <span className="muted-text">10.0</span>
+            </div>
+
+            <div style={{ marginTop: "16px" }}>
+            <div className="save-action-wrap">
+                <button
+                    type="button"
+                    className="primary-button"
+                    onClick={handleSaveSeverity}
+                    disabled={savingSeverity}
+                >
+                    {savingSeverity ? "Saving..." : "Save"}
+                </button>
+
+                <span className={`save-check ${severitySaved ? "visible" : ""}`}>✓</span>
+              </div>
+            </div>
         </div>
       </section>
     </div>

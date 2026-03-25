@@ -73,8 +73,9 @@ public class BatchJobService {
 
                 boolean cveAlreadyPresent = cveIdsToSend.contains(cveId);
                 boolean isPastCve = !cveStateService.isNewCve(cveId);
+                boolean outsideSeverityThreshold = Float.parseFloat(parsedCve.getScore()) < Float.parseFloat(settings.getSeverityThreshold());
 
-                if (!descriptionMatchesProduct(description, product) || cveAlreadyPresent || isPastCve) {
+                if (!descriptionMatchesProduct(description, product) || cveAlreadyPresent || isPastCve || outsideSeverityThreshold) {
                     continue;
                 }
 
@@ -93,5 +94,7 @@ public class BatchJobService {
                 cveStateService.markCveAsSeen(cveId);
             }
         }
+
+        System.out.println("Executed scheduled run @" + Instant.now().toString());
     }
 }

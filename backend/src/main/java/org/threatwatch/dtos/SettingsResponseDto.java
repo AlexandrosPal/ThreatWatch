@@ -12,8 +12,9 @@ public class SettingsResponseDto {
     private String enabled;
     private Set<String> supportedProducts;
     private Set<String> productsSelected;
+    private String severityThreshold;
 
-    public SettingsResponseDto(String batchInterval, String lookbackWindow, String deduplicationWindow, Set<String> emails, Set<String> notificationTypes, String enabled, Set<String> supportedProducts, Set<String> productsSelected) {
+    public SettingsResponseDto(String batchInterval, String lookbackWindow, String deduplicationWindow, Set<String> emails, Set<String> notificationTypes, String enabled, Set<String> supportedProducts, Set<String> productsSelected, String severityThreshold) {
         this.batchInterval = batchInterval;
         this.lookbackWindow = lookbackWindow;
         this.deduplicationWindow = deduplicationWindow;
@@ -22,6 +23,7 @@ public class SettingsResponseDto {
         this.enabled = enabled;
         this.supportedProducts = supportedProducts;
         this.productsSelected = productsSelected;
+        this.severityThreshold = severityThreshold;
     }
 
     public String getBatchInterval() { return this.batchInterval; }
@@ -39,4 +41,6 @@ public class SettingsResponseDto {
     public Set<String> getSupportedProducts() { return this.supportedProducts; }
 
     public Set<String> getProductsSelected() { return this.productsSelected; }
+
+    public String getSeverityThreshold() { return this.severityThreshold; }
 }
