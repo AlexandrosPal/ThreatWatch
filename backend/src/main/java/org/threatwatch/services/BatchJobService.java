@@ -53,7 +53,7 @@ public class BatchJobService {
 
         String publishEndDatetime = dateTimeFormatter.format(rawPublishEndDatetime);
         String publishStartDatetime = dateTimeFormatter.format(rawPublishStartDatetime);
-        Set<String> products = productsService.getProducts().keySet();
+        Set<String> products = settingsService.retrieveSettings().getProductsSelected();
 
         StringBuilder cveListHtml = new StringBuilder();
         String html = emailService.loadHtmlTemplate();

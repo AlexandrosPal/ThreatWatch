@@ -2,10 +2,7 @@ package org.threatwatch.controllers;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 import org.threatwatch.dtos.ApiResponseDto;
 import org.threatwatch.dtos.SettingsResponseDto;
 import org.threatwatch.dtos.SettingsRequestDto;
@@ -14,7 +11,8 @@ import org.threatwatch.services.SettingsService;
 import java.time.Instant;
 import java.util.UUID;
 
-@Controller
+@CrossOrigin(origins = "http://localhost:5173")
+@RestController
 @RequestMapping("/api/settings")
 public class SettingsController {
 

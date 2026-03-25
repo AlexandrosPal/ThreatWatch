@@ -2,8 +2,10 @@ package org.threatwatch.controllers;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.threatwatch.dtos.ApiResponseDto;
 import org.threatwatch.models.ProductModel;
 import org.threatwatch.services.ProductsService;
@@ -13,7 +15,8 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.UUID;
 
-@Controller
+@CrossOrigin(origins = "http://localhost:5173")
+@RestController
 @RequestMapping("/api/products")
 public class ProductsController {
 

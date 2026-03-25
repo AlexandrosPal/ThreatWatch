@@ -10,14 +10,18 @@ public class SettingsResponseDto {
     private Set<String> emails;
     private Set<String> notificationTypes;
     private String enabled;
+    private Set<String> supportedProducts;
+    private Set<String> productsSelected;
 
-    public SettingsResponseDto(String batchInterval, String lookbackWindow, String deduplicationWindow, Set<String> emails, Set<String> notificationTypes, String enabled) {
+    public SettingsResponseDto(String batchInterval, String lookbackWindow, String deduplicationWindow, Set<String> emails, Set<String> notificationTypes, String enabled, Set<String> supportedProducts, Set<String> productsSelected) {
         this.batchInterval = batchInterval;
         this.lookbackWindow = lookbackWindow;
         this.deduplicationWindow = deduplicationWindow;
         this.emails = emails;
         this.notificationTypes = notificationTypes;
         this.enabled = enabled;
+        this.supportedProducts = supportedProducts;
+        this.productsSelected = productsSelected;
     }
 
     public String getBatchInterval() { return this.batchInterval; }
@@ -31,4 +35,8 @@ public class SettingsResponseDto {
     public Set<String> getNotificationTypes() { return this.notificationTypes; }
 
     public String getEnabled() { return this.enabled; }
+
+    public Set<String> getSupportedProducts() { return this.supportedProducts; }
+
+    public Set<String> getProductsSelected() { return this.productsSelected; }
 }

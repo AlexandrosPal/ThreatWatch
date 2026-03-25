@@ -10,6 +10,7 @@ public class SettingsRequestDto {
     private String email;
     private NotificationTypes notificationType;
     private String enabled;
+    private String productAddition;
 
     public Integer getBatchInterval() { return batchInterval; }
 
@@ -18,4 +19,6 @@ public class SettingsRequestDto {
     public NotificationTypes getNotificationType() { return notificationType; }
 
     public String getEnabled() { return this.enabled; }
+
+    public String getProductAddition() { return this.productAddition; }
 }

@@ -1,0 +1,328 @@
+import { useEffect, useState } from "react";
+import { getSettings, patchSettings } from "../services/api";
+
+
+function formatHoursFromMinutes(minutes) {
+  const num = Number(minutes);
+
+  if (!num || isNaN(num)) return "";
+
+  if (num < 60) return `= ${num} min`;
+
+  const hours = num / 60;
+  if (hours < 24) return `= ${hours.toFixed(2)} h`;
+
+  const days = hours / 24;
+  return `= ${days.toFixed(2)} d`;
+}
+
+export default function SettingsForm() {
+  const [batchIntervalMinutes, setBatchIntervalMinutes] = useState("");
+  const [emails, setEmails] = useState([]);
+  const [emailInput, setEmailInput] = useState("");
+  const [supportedProducts, setSupportedProducts] = useState([]);
+  const [selectedProducts, setSelectedProducts] = useState([]);
+  const [selectedProductInput, setSelectedProductInput] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [savingBatch, setSavingBatch] = useState(false);
+  const [savingEmail, setSavingEmail] = useState(false);
+  const [savingProduct, setSavingProduct] = useState(false);
+  const [enabled, setEnabled] = useState(false);
+  const [savingEnabled, setSavingEnabled] = useState(false);
+
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  async function loadSettings() {
+    try {
+      setLoading(true);
+      const data = await getSettings();
+
+      const seconds = Number(data?.batchInterval || 0);
+      const minutes = seconds ? Math.round(seconds / 60) : "";
+
+      setBatchIntervalMinutes(minutes);
+      setEmails(data?.emails || []);
+      setSupportedProducts(data?.supportedProducts || []);
+      setSelectedProducts(data?.productsSelected || []);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to load settings");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleToggleEnabled() {
+    try {
+        setSavingEnabled(true);
+
+        await patchSettings({
+        enabled: (!enabled).toString(),
+        });
+
+        setEnabled(!enabled);
+    } catch (err) {
+        console.error(err);
+        alert("Failed to update enabled state");
+    } finally {
+        setSavingEnabled(false);
+    }
+    }
+
+  async function handleSaveBatchInterval() {
+    try {
+      setSavingBatch(true);
+
+      const minutes = Number(batchIntervalMinutes);
+      const seconds = isNaN(minutes) ? 0 : minutes * 60;
+
+      await patchSettings({
+        batchInterval: String(seconds),
+      });
+
+      await loadSettings();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to save batch interval");
+    } finally {
+      setSavingBatch(false);
+    }
+  }
+
+  async function handleAddEmail() {
+    const trimmedEmail = emailInput.trim();
+    if (!trimmedEmail) return;
+
+    try {
+      setSavingEmail(true);
+      await patchSettings({
+        email: trimmedEmail,
+      });
+      setEmailInput("");
+      await loadSettings();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to add email");
+    } finally {
+      setSavingEmail(false);
+    }
+  }
+
+  async function handleRemoveEmail(emailToRemove) {
+    try {
+      setSavingEmail(true);
+      await patchSettings({
+        email: emailToRemove,
+      });
+      await loadSettings();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to remove email");
+    } finally {
+      setSavingEmail(false);
+    }
+  }
+
+  async function handleAddProduct() {
+    const product = selectedProductInput.trim();
+    if (!product) return;
+
+    try {
+      setSavingProduct(true);
+      await patchSettings({
+        productAddition: product,
+      });
+      setSelectedProductInput("");
+      await loadSettings();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to add product");
+    } finally {
+      setSavingProduct(false);
+    }
+  }
+
+  async function handleRemoveProduct(productToRemove) {
+    try {
+      setSavingProduct(true);
+      await patchSettings({
+        productAddition: productToRemove,
+      });
+      await loadSettings();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to remove product");
+    } finally {
+      setSavingProduct(false);
+    }
+  }
+
+  if (loading) {
+    return <p className="loading-text">Loading settings...</p>;
+  }
+
+  return (
+    <div className="settings-grid">
+      <section className="card">
+        <div className="card-header">
+          <div>
+            <h2>Batch Interval</h2>
+            <p>How often the background job should run.</p>
+          </div>
+        </div>
+
+        <div className="input-row">
+          <div className="input-with-suffix">
+            <input
+              className="text-input"
+              type="number"
+              min="1"
+              value={batchIntervalMinutes}
+              onChange={(e) => setBatchIntervalMinutes(e.target.value)}
+              placeholder="Batch interval in minutes"
+            />
+            <span className="input-suffix">
+              {formatHoursFromMinutes(batchIntervalMinutes)}
+            </span>
+          </div>
+
+          <button
+            className="primary-button"
+            onClick={handleSaveBatchInterval}
+            disabled={savingBatch}
+          >
+            {savingBatch ? "Saving..." : "Save"}
+          </button>
+        </div>
+      </section>
+
+      <section className="card">
+        <div className="card-header">
+          <div>
+            <h2>Emails</h2>
+            <p>Add or remove notification recipients.</p>
+          </div>
+        </div>
+
+        <div className="input-row">
+          <input
+            className="text-input"
+            value={emailInput}
+            onChange={(e) => setEmailInput(e.target.value)}
+            placeholder="name@example.com"
+          />
+          <button
+            className="icon-button"
+            onClick={handleAddEmail}
+            disabled={savingEmail}
+            aria-label="Add email"
+            title="Add email"
+          >
+            +
+          </button>
+        </div>
+
+        <div className="chips-wrap">
+          {emails.length === 0 ? (
+            <p className="muted-text">No emails added yet.</p>
+          ) : (
+            emails.map((email) => (
+              <div key={email} className="chip">
+                <span>{email}</span>
+                <button
+                  className="chip-remove"
+                  onClick={() => handleRemoveEmail(email)}
+                  disabled={savingEmail}
+                  aria-label={`Remove ${email}`}
+                  title={`Remove ${email}`}
+                >
+                  ×
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+      </section>
+      
+      <section className="card">
+        <div className="card-header">
+          <div>
+            <h2>Watchlist</h2>
+            <p>Select the technologies you want to receive alerts for.</p>
+          </div>
+        </div>
+
+        <div className="input-row">
+          <select
+            className="text-input"
+            value={selectedProductInput}
+            onChange={(e) => setSelectedProductInput(e.target.value)}
+          >
+            <option value="">Select item</option>
+            {supportedProducts.map((product) => (
+              <option key={product} value={product}>
+                {product}
+              </option>
+            ))}
+          </select>
+
+          <button
+            className="icon-button"
+            onClick={handleAddProduct}
+            disabled={savingProduct}
+            aria-label="Add product"
+            title="Add product"
+          >
+            +
+          </button>
+        </div>
+
+        <div className="chips-wrap">
+          {selectedProducts.length === 0 ? (
+            <p className="muted-text">No products selected yet.</p>
+          ) : (
+            selectedProducts.map((product) => (
+              <div key={product} className="chip">
+                <span>{product}</span>
+                <button
+                  className="chip-remove"
+                  onClick={() => handleRemoveProduct(product)}
+                  disabled={savingProduct}
+                  aria-label={`Remove ${product}`}
+                  title={`Remove ${product}`}
+                >
+                  ×
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+      </section>
+      <section className="card">
+        <div className="card-header">
+            <div>
+            <h2>Scheduler</h2>
+            <p>Enable or disable automatic execution.</p>
+            </div>
+        </div>
+
+        <div className="toggle-row">
+            <span className="toggle-label">
+            {enabled ? "Enabled" : "Disabled"}
+            </span>
+
+            <button
+            type="button"
+            className={`toggle-switch ${enabled ? "active" : ""}`}
+            onClick={handleToggleEnabled}
+            disabled={savingEnabled}
+            >
+            <span className="toggle-thumb"></span>
+            </button>
+        </div>
+      </section>
+    </div>
+  );
+}

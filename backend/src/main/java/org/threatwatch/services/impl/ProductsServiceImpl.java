@@ -27,7 +27,7 @@ public class ProductsServiceImpl implements ProductsService {
     @PostConstruct
     public void init() {
         try {
-            supportedProducts = loadProducts();
+            this.supportedProducts = loadProducts();
         } catch (Exception e) {
             throw new RuntimeException("Failed to load products.json", e);
         }
@@ -36,5 +36,19 @@ public class ProductsServiceImpl implements ProductsService {
     @Override
     public Map<String, ArrayList<ProductModel>> getProducts() {
         return supportedProducts;
+    }
+
+    public boolean isSupportedProduct(String product) {
+        return this.supportedProducts.keySet().stream()
+                .anyMatch(p -> p.equalsIgnoreCase(product));
+    }
+
+    public String normalizeProduct(String product) {
+        return this.supportedProducts.keySet().stream()
+                .filter(p -> p.equalsIgnoreCase(product))
+                .findFirst()
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Unsupported product: " + product)
+                );
     }
 }
