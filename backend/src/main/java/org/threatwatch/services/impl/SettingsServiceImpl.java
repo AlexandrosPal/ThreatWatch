@@ -49,7 +49,7 @@ public class SettingsServiceImpl implements SettingsService {
         if (batchInterval != null) {
             redisTemplate.opsForValue().set("settings:batchInterval", String.valueOf(batchInterval));
             redisTemplate.opsForValue().set("settings:lookbackWindow", String.valueOf(batchInterval * 2));
-            redisTemplate.opsForValue().set("settings:deduplicationWindow", String.valueOf(batchInterval * 2.4));
+            redisTemplate.opsForValue().set("settings:deduplicationWindow", String.valueOf(Long.parseLong(String.valueOf(batchInterval * 2.4))));
         }
 
         if (enabled != null) {
