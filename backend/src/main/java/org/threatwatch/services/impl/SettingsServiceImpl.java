@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.threatwatch.dtos.SettingsRequestDto;
 import org.threatwatch.dtos.SettingsResponseDto;
 import org.threatwatch.models.NotificationTypes;
+import org.threatwatch.services.ProductsService;
 import org.threatwatch.services.SettingsService;
 
 import java.util.Set;
@@ -13,6 +14,7 @@ import java.util.Set;
 public class SettingsServiceImpl implements SettingsService {
 
     private final StringRedisTemplate redisTemplate;
+    private final ProductsService productsService;
 
     private String batchInterval;
     private String lookbackWindow;
@@ -20,9 +22,13 @@ public class SettingsServiceImpl implements SettingsService {
     private Set<String> emails;
     private Set<String> notificationTypes;
     private String enabled;
+    private Set<String> productsSelected;
+    private String severityThreshold;
+    private String earlyAlerts;
 
-    public SettingsServiceImpl(StringRedisTemplate redisTemplate) {
+    public SettingsServiceImpl(StringRedisTemplate redisTemplate, ProductsService productsService) {
         this.redisTemplate = redisTemplate;
+        this.productsService = productsService;
     }
 
     @Override
@@ -32,11 +38,16 @@ public class SettingsServiceImpl implements SettingsService {
         this.lookbackWindow = redisTemplate.opsForValue().get("settings:lookbackWindow");
         this.deduplicationWindow = redisTemplate.opsForValue().get("settings:deduplicationWindow");
         this.enabled = redisTemplate.opsForValue().get("settings:enabled");
+        this.severityThreshold = redisTemplate.opsForValue().get("settings:severityThreshold");
+        this.earlyAlerts = redisTemplate.opsForValue().get("settings:earlyAlerts");
 
         this.emails = redisTemplate.opsForSet().members("settings:emails");
         this.notificationTypes = redisTemplate.opsForSet().members("settings:notificationTypes");
 
-        return new SettingsResponseDto(this.batchInterval, this.lookbackWindow, this.deduplicationWindow, this.emails, this.notificationTypes, this.enabled);
+        Set<String> supportedProducts = productsService.getProducts().keySet();
+        this.productsSelected = redisTemplate.opsForSet().members("settings:productsSelected");
+
+        return new SettingsResponseDto(this.batchInterval, this.lookbackWindow, this.deduplicationWindow, this.emails, this.notificationTypes, this.enabled, supportedProducts, this.productsSelected, this.severityThreshold, this.earlyAlerts);
     }
 
     @Override
@@ -45,11 +56,14 @@ public class SettingsServiceImpl implements SettingsService {
         String enabled = request.getEnabled();
         String email = request.getEmail();
         NotificationTypes notificationType = request.getNotificationType();
+        String productAddition = request.getProductAddition();
+        String severityThreshold = request.getSeverityThreshold();
+        String earlyAlerts = request.getEarlyAlerts();
 
         if (batchInterval != null) {
-            redisTemplate.opsForValue().set("settings:batchInterval", String.valueOf(batchInterval));
-            redisTemplate.opsForValue().set("settings:lookbackWindow", String.valueOf(batchInterval * 2));
-            redisTemplate.opsForValue().set("settings:deduplicationWindow", String.valueOf(Long.parseLong(String.valueOf(batchInterval * 2.4))));
+            redisTemplate.opsForValue().set("settings:batchInterval", String.valueOf(batchInterval).replace(".0", ""));
+            redisTemplate.opsForValue().set("settings:lookbackWindow", String.valueOf(batchInterval * 2).replace(".0", ""));
+            redisTemplate.opsForValue().set("settings:deduplicationWindow", String.valueOf(batchInterval * 2.4).replace(".0", ""));
         }
 
         if (enabled != null) {
@@ -70,6 +84,26 @@ public class SettingsServiceImpl implements SettingsService {
             } else {
                 redisTemplate.opsForSet().add("settings:notificationTypes", String.valueOf(notificationType));
             }
+        }
+
+        if (productAddition != null) {
+            String normalizedProduct = productsService.normalizeProduct(
+                    request.getProductAddition()
+            );
+
+            if (redisTemplate.opsForSet().isMember("settings:productsSelected", productAddition)) {
+                redisTemplate.opsForSet().remove("settings:productsSelected", productAddition);
+            } else {
+                redisTemplate.opsForSet().add("settings:productsSelected", productAddition);
+            }
+        }
+
+        if (severityThreshold != null) {
+            redisTemplate.opsForValue().set("settings:severityThreshold", severityThreshold);
+        }
+
+        if (earlyAlerts != null) {
+            redisTemplate.opsForValue().set("settings:earlyAlerts", earlyAlerts);
         }
     }
 }

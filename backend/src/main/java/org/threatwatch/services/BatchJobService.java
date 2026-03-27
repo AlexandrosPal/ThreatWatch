@@ -10,6 +10,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 @Service
@@ -53,7 +54,7 @@ public class BatchJobService {
 
         String publishEndDatetime = dateTimeFormatter.format(rawPublishEndDatetime);
         String publishStartDatetime = dateTimeFormatter.format(rawPublishStartDatetime);
-        Set<String> products = productsService.getProducts().keySet();
+        Set<String> products = settingsService.retrieveSettings().getProductsSelected();
 
         StringBuilder cveListHtml = new StringBuilder();
         String html = emailService.loadHtmlTemplate();
@@ -61,6 +62,7 @@ public class BatchJobService {
         Set<String> cveIdsToSend = new HashSet<>();
 
         for (String product : products) {
+            Thread.sleep(6000);
             JsonNode response = nvdRestService.getRecentVulnerabilitiesByProduct(product.toLowerCase(), publishStartDatetime, publishEndDatetime);
             JsonNode vulnerabilities = response.path("vulnerabilities");
 
@@ -73,8 +75,11 @@ public class BatchJobService {
 
                 boolean cveAlreadyPresent = cveIdsToSend.contains(cveId);
                 boolean isPastCve = !cveStateService.isNewCve(cveId);
+                boolean outsideSeverityThreshold = Float.parseFloat(parsedCve.getScore()) < Float.parseFloat(settings.getSeverityThreshold());
+                boolean earlyCve = Objects.equals(parsedCve.getScore(), "-1");
+                boolean earlyAlertsEnabled = Boolean.parseBoolean(settingsService.retrieveSettings().getEarlyAlerts());
 
-                if (!descriptionMatchesProduct(description, product) || cveAlreadyPresent || isPastCve) {
+                if (!descriptionMatchesProduct(description, product) || cveAlreadyPresent || isPastCve || (outsideSeverityThreshold && !earlyCve) || (earlyCve && !earlyAlertsEnabled)) {
                     continue;
                 }
 
@@ -93,5 +98,7 @@ public class BatchJobService {
                 cveStateService.markCveAsSeen(cveId);
             }
         }
+
+        System.out.println("Executed scheduled run @" + Instant.now().toString());
     }
 }

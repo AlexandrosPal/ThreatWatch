@@ -1,5 +1,6 @@
 package org.threatwatch.services;
 
+import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
@@ -10,7 +11,9 @@ import org.springframework.stereotype.Service;
 import org.threatwatch.models.ParsedCveModel;
 
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 import java.util.Set;
 
 @Service
@@ -25,9 +28,12 @@ public class EmailService {
         this.mailSender = mailSender;
     }
 
-    public void sendEmail(Set<String> recipients, String subject, String body) {
+    public void sendEmail(Set<String> recipients, String subject, String body) throws Exception {
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom("no.reply.threatwatch@gmail.com");
+        message.setFrom(String.valueOf(new InternetAddress(
+                "no.reply.threatwatch@gmail.com",
+                "ThreatWatch Alerts"
+        )));
         message.setTo(recipients.toArray(new String[0]));
         message.setSubject(subject);
         message.setText(body);
@@ -46,6 +52,10 @@ public class EmailService {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
+        message.setFrom(new InternetAddress(
+                "no.reply.threatwatch@gmail.com",
+                "ThreatWatch Alerts"
+        ));
         helper.setTo(recipients.toArray(new String[0]));
         helper.setSubject(subject);
 
@@ -55,35 +65,31 @@ public class EmailService {
         mailSender.send(message);
     }
 
-    public String buildCveHtml(String product, ParsedCveModel parsedCve) {
-        String color = switch (parsedCve.getSeverity()) {
-            case "CRITICAL" -> "#b60205";
-            case "HIGH" -> "#d73a49";
-            case "MEDIUM" -> "#fb8500";
-            case "LOW" -> "#2da44e";
-            default -> "#6c757d";
+    public String buildCveHtml(String product, ParsedCveModel cve) {
+        String color = switch (cve.getSeverity()) {
+            case "CRITICAL" -> "#b42318";
+            case "HIGH" -> "#d92d20";
+            case "MEDIUM" -> "#f79009";
+            case "LOW" -> "#12b76a";
+            default -> "#98a2b3";
         };
 
-        String shortDescription = parsedCve.getDescription().length() > maxDescriptionLength
-                ? parsedCve.getDescription().substring(0, maxDescriptionLength) + "..."
-                : parsedCve.getDescription();
+        String desc = cve.getDescription().length() > maxDescriptionLength
+                ? cve.getDescription().substring(0, maxDescriptionLength) + "..."
+                : cve.getDescription();
 
-        return """
-            <div style="border:1px solid #e1e4e8; border-radius:6px; padding:12px; margin-bottom:12px;">
-                <div style="font-weight:bold; font-size:14px;">
-                    %s  |  %s
-                    <span style="background:%s; color:white; padding:2px 6px; border-radius:4px; font-size:11px; margin-left:8px;">%s</span>
-                    <span style="padding-left:5px;">%s</span>
-                </div>
-                <div style="font-size:12px; color:#555; margin-top:4px;">
-                    Published: %s
-                </div>
-                <div style="font-size:13px; margin-top:8px;">
-                    %s
-                    <a href="https://nvd.nist.gov/vuln/detail/%s">View details</a>
-                </div>
-            </div>
-            """.formatted(product, parsedCve.getCveId(), color, parsedCve.getSeverity(), parsedCve.getScore(), parsedCve.getPublished(), shortDescription, parsedCve.getCveId());
+        String score = "-1".equals(cve.getScore()) ? "" : cve.getScore();
+        String scoreHtml = score.isEmpty() ? "" : "<span class=\"score\">" + score + "</span>";
+
+        return "<div class=\"card\" style=\"border:1px solid #e5e7eb;padding:12px;margin-bottom:8px;\">"
+                + "<div style=\"font-weight:bold;\">" + product + " | " + cve.getCveId() + "</div>"
+                + "<div style=\"font-size:12px;color:#6b7280;\">" + cve.getPublished() + "</div>"
+                + "<div style=\"margin-top:6px;\">"
+                + "<span class=\"badge\" style=\"background:" + color + ";color:white;padding:3px 6px;font-size:11px;\">" + cve.getSeverity() + "</span>"
+                + (score.isEmpty() ? "" : "<span style=\"margin-left:6px;\">" + score + "</span>")
+                + "</div>"
+                + "<div style=\"margin-top:8px;font-size:13px;\">" + desc + "</div>"
+                + "<a href=\"https://nvd.nist.gov/vuln/detail/" + cve.getCveId() + "\" style=\"color:#2563eb;font-size:12px;text-decoration: none;\">View →</a>"
+                + "</div>";
     }
-
 }

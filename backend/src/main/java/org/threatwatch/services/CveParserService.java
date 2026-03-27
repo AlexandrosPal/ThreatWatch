@@ -27,21 +27,29 @@ public class CveParserService {
                     .findFirst()
                     .orElse("");
             JsonNode metricsNode = cve.path("metrics");
-            JsonNode metrics = metricsNode.has("cvssMetricV40") ? metricsNode.get("cvssMetricV40") :
-                    metricsNode.has("cvssMetricV31") ? metricsNode.get("cvssMetricV31") :
-                            metricsNode.has("cvssMetricV30") ? metricsNode.get("cvssMetricV30") :
-                                    null;
-            JsonNode cvssData = metrics.get(0).path("cvssData");
-            String severity = cvssData.path("baseSeverity").asString();
-            String score = cvssData.path("baseScore").asString();
-            ;
+            String severity;
+            String score;
+
+            if (!metricsNode.isEmpty()) {
+                JsonNode metrics = metricsNode.has("cvssMetricV40") ? metricsNode.get("cvssMetricV40") :
+                        metricsNode.has("cvssMetricV31") ? metricsNode.get("cvssMetricV31") :
+                                metricsNode.has("cvssMetricV30") ? metricsNode.get("cvssMetricV30") :
+                                        null;
+                JsonNode cvssData = metrics.get(0).path("cvssData");
+                severity = cvssData.path("baseSeverity").asString();
+                score = cvssData.path("baseScore").asString();
+            } else {
+                severity = "UNKNOWN";
+                score = "-1";
+            }
+
             String published = emailDateTimeFormatter.format(
                     stringDateTimeParser.parse(
                             cve.get("published").asString()
                     )
             );
 
-            return new ParsedCveModel(cveId, description, metrics, cvssData, severity, score, published);
+            return new ParsedCveModel(cveId, description, severity, score, published);
         }
     }
 
