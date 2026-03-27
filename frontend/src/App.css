@@ -439,3 +439,62 @@ select.text-input {
   opacity: 1;
   transform: translateY(-1px);
 }
+
+.toggle-divider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 14px 0;
+}
+
+.label-with-tooltip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ? icon */
+.tooltip-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  width: 16px;
+  height: 16px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 50%;
+  background: #e5e7eb;
+  color: #344054;
+  cursor: default;
+}
+
+.tooltip-container {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip-text {
+  position: absolute;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 220px;
+
+  background: #111827;
+  color: white;
+  font-size: 12px;
+  padding: 8px 10px;
+  border-radius: 6px;
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  text-align: center;
+  z-index: 10;
+}
+
+.tooltip-container:hover .tooltip-text {
+  opacity: 1;
+}

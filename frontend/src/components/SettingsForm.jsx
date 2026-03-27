@@ -24,7 +24,8 @@ function getSeverityMeta(score) {
   }
 
   let label;
-  if (num < 4.0) label = "LOW";
+  if (num < 0) label = "UNKNOWN";
+  else if (num < 4.0) label = "LOW";
   else if (num < 7.0) label = "MEDIUM";
   else if (num < 9.0) label = "HIGH";
   else label = "CRITICAL";
@@ -54,9 +55,15 @@ export default function SettingsForm() {
   const [savingSeverity, setSavingSeverity] = useState(false);
   const [batchSaved, setBatchSaved] = useState(false);
   const [severitySaved, setSeveritySaved] = useState(false);
+  const [earlyAlerts, setEarlyAlerts] = useState(false);
+  const [savingEarlyAlerts, setSavingEarlyAlerts] = useState(false);
 
   const percent = (minimumSeverityScore / 10) * 100;
   const color = getSeverityMeta(minimumSeverityScore).color;
+
+  const availableProducts = supportedProducts.filter(
+    (product) => !selectedProducts.includes(product)
+  );
 
   useEffect(() => {
     loadSettings();
@@ -79,6 +86,7 @@ export default function SettingsForm() {
       setSelectedProducts(data?.productsSelected || []);
       setEnabled(String(data?.enabled).toLowerCase() === "true");
       setMinimumSeverityScore(data?.severityThreshold || "7.0");
+      setEarlyAlerts(String(data?.earlyAlerts).toLowerCase() === "true");
     } catch (err) {
       console.error(err);
       alert("Failed to load settings");
@@ -215,6 +223,23 @@ export default function SettingsForm() {
     }
   }
 
+  async function handleToggleEarlyAlerts() {
+    try {
+      setSavingEarlyAlerts(true);
+
+      await patchSettings({
+        earlyAlerts: (!earlyAlerts).toString(),
+      });
+
+      setEarlyAlerts(!earlyAlerts);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update early alerts setting");
+    } finally {
+      setSavingEarlyAlerts(false);
+    }
+  }
+
   if (loading) {
     return <p className="loading-text">Loading settings...</p>;
   }
@@ -315,9 +340,12 @@ export default function SettingsForm() {
             className="text-input"
             value={selectedProductInput}
             onChange={(e) => setSelectedProductInput(e.target.value)}
+            disabled={availableProducts.length === 0}
           >
-            <option value="">Select item</option>
-            {supportedProducts.map((product) => (
+            <option value="">
+              {availableProducts.length === 0 ? "No more items available" : "Select item"}
+            </option>
+            {availableProducts.map((product) => (
               <option key={product} value={product}>
                 {product}
               </option>
@@ -366,7 +394,7 @@ export default function SettingsForm() {
 
         <div className="toggle-row">
             <span className="toggle-label">
-            {enabled ? "Enabled" : "Disabled"}
+            Scheduler
             </span>
 
             <button
@@ -378,6 +406,31 @@ export default function SettingsForm() {
             <span className="toggle-thumb"></span>
             </button>
         </div>
+        <div className="toggle-divider"></div>
+        <div className="toggle-row">
+        <div className="label-with-tooltip">
+          <span className="toggle-label">
+            Early alerts
+          </span>
+
+          <div className="tooltip-container">
+            <span className="tooltip-icon">?</span>
+
+            <div className="tooltip-text">
+              Include CVEs without severity score (early-stage vulnerabilities).
+            </div>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          className={`toggle-switch ${earlyAlerts ? "active" : ""}`}
+          onClick={handleToggleEarlyAlerts}
+          disabled={!enabled || savingEarlyAlerts}
+        >
+          <span className="toggle-thumb"></span>
+        </button>
+      </div>
       </section>
       <section className="card">
         <div className="card-header">

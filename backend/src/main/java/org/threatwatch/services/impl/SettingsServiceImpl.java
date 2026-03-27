@@ -24,6 +24,7 @@ public class SettingsServiceImpl implements SettingsService {
     private String enabled;
     private Set<String> productsSelected;
     private String severityThreshold;
+    private String earlyAlerts;
 
     public SettingsServiceImpl(StringRedisTemplate redisTemplate, ProductsService productsService) {
         this.redisTemplate = redisTemplate;
@@ -38,6 +39,7 @@ public class SettingsServiceImpl implements SettingsService {
         this.deduplicationWindow = redisTemplate.opsForValue().get("settings:deduplicationWindow");
         this.enabled = redisTemplate.opsForValue().get("settings:enabled");
         this.severityThreshold = redisTemplate.opsForValue().get("settings:severityThreshold");
+        this.earlyAlerts = redisTemplate.opsForValue().get("settings:earlyAlerts");
 
         this.emails = redisTemplate.opsForSet().members("settings:emails");
         this.notificationTypes = redisTemplate.opsForSet().members("settings:notificationTypes");
@@ -45,7 +47,7 @@ public class SettingsServiceImpl implements SettingsService {
         Set<String> supportedProducts = productsService.getProducts().keySet();
         this.productsSelected = redisTemplate.opsForSet().members("settings:productsSelected");
 
-        return new SettingsResponseDto(this.batchInterval, this.lookbackWindow, this.deduplicationWindow, this.emails, this.notificationTypes, this.enabled, supportedProducts, this.productsSelected, this.severityThreshold);
+        return new SettingsResponseDto(this.batchInterval, this.lookbackWindow, this.deduplicationWindow, this.emails, this.notificationTypes, this.enabled, supportedProducts, this.productsSelected, this.severityThreshold, this.earlyAlerts);
     }
 
     @Override
@@ -56,6 +58,7 @@ public class SettingsServiceImpl implements SettingsService {
         NotificationTypes notificationType = request.getNotificationType();
         String productAddition = request.getProductAddition();
         String severityThreshold = request.getSeverityThreshold();
+        String earlyAlerts = request.getEarlyAlerts();
 
         if (batchInterval != null) {
             redisTemplate.opsForValue().set("settings:batchInterval", String.valueOf(batchInterval).replace(".0", ""));
@@ -97,6 +100,10 @@ public class SettingsServiceImpl implements SettingsService {
 
         if (severityThreshold != null) {
             redisTemplate.opsForValue().set("settings:severityThreshold", severityThreshold);
+        }
+
+        if (earlyAlerts != null) {
+            redisTemplate.opsForValue().set("settings:earlyAlerts", earlyAlerts);
         }
     }
 }
