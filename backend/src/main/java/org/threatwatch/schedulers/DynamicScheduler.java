@@ -25,15 +25,14 @@ public class DynamicScheduler {
 
     @PostConstruct
     public void start() throws Exception {
+        batchJobService.executeScheduledRun();
         scheduleNextRun();
     }
 
-    private void scheduleNextRun() throws Exception {
+    private void scheduleNextRun() {
 
-        int delay = Integer.valueOf(settingsService.retrieveSettings().getBatchInterval());
-        boolean enabled = Boolean.valueOf(settingsService.retrieveSettings().getEnabled());
-
-//        batchJobService.executeScheduledRun();
+        int delay = Integer.parseInt(settingsService.retrieveSettings().getBatchInterval());
+        boolean enabled = Boolean.parseBoolean(settingsService.retrieveSettings().getEnabled());
 
         executor.schedule(() -> {
             try {
@@ -47,7 +46,6 @@ public class DynamicScheduler {
                     scheduleNextRun();
                 } catch (Exception e) {
                     System.out.println("Error in scheduling next run");
-                    throw new RuntimeException(e);
                 }
             }
         }, delay, TimeUnit.SECONDS);

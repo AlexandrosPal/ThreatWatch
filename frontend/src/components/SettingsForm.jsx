@@ -40,8 +40,11 @@ function getSeverityMeta(score) {
 
 export default function SettingsForm() {
   const [batchIntervalMinutes, setBatchIntervalMinutes] = useState("");
+  const isBatchInvalid = batchIntervalMinutes === "" || Number(batchIntervalMinutes) < 1;
   const [emails, setEmails] = useState([]);
   const [emailInput, setEmailInput] = useState("");
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const isEmailInvalid = emailInput.trim() === "" || !emailRegex.test(emailInput.trim());
   const [supportedProducts, setSupportedProducts] = useState([]);
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [selectedProductInput, setSelectedProductInput] = useState("");
@@ -53,7 +56,7 @@ export default function SettingsForm() {
   const [savingEnabled, setSavingEnabled] = useState(false);
   const [minimumSeverityScore, setMinimumSeverityScore] = useState("7.0");
   const [savingSeverity, setSavingSeverity] = useState(false);
-  const [batchSaved, setBatchSaved] = useState(false);
+  // const [batchSaved, setBatchSaved] = useState(false);
   const [severitySaved, setSeveritySaved] = useState(false);
   const [earlyAlerts, setEarlyAlerts] = useState(false);
   const [savingEarlyAlerts, setSavingEarlyAlerts] = useState(false);
@@ -254,25 +257,40 @@ export default function SettingsForm() {
           </div>
         </div>
 
-        <div className="input-row">
-          <div className="input-with-suffix">
-            <input
-              className="text-input"
-              type="number"
-              min="1"
-              value={batchIntervalMinutes}
-              onChange={(e) => setBatchIntervalMinutes(e.target.value)}
-              placeholder="Batch interval in minutes"
-            />
-            <span className="input-suffix">
-              {formatHoursFromMinutes(batchIntervalMinutes)}
-            </span>
+        <div className="input-row input-row-top">
+          <div className="field-block">
+            <div className="input-with-suffix">
+              <input
+                className={`text-input ${isBatchInvalid ? "input-error" : ""}`}
+                type="text"
+                inputMode="numeric"
+                value={batchIntervalMinutes}
+                onChange={(e) => {
+                  const value = e.target.value;
+
+                  if (/^\d*$/.test(value)) {
+                    setBatchIntervalMinutes(value);
+                  }
+                }}
+                placeholder="Batch interval in minutes"
+              />
+              <span className="input-suffix">
+                {formatHoursFromMinutes(batchIntervalMinutes)}
+              </span>
+            </div>
+
+            {isBatchInvalid && (
+              <p className="error-text">
+                Minimum value is 1 minute
+              </p>
+            )}
           </div>
 
           <button
+            type="button"
             className="primary-button"
             onClick={handleSaveBatchInterval}
-            disabled={savingBatch}
+            disabled={savingBatch || isBatchInvalid}
           >
             {savingBatch ? "Saving..." : "Save"}
           </button>
@@ -289,7 +307,7 @@ export default function SettingsForm() {
 
         <div className="input-row">
           <input
-            className="text-input"
+            className={`text-input ${isEmailInvalid && emailInput ? "input-error" : ""}`}
             value={emailInput}
             onChange={(e) => setEmailInput(e.target.value)}
             placeholder="name@example.com"
@@ -297,12 +315,15 @@ export default function SettingsForm() {
           <button
             className="icon-button"
             onClick={handleAddEmail}
-            disabled={savingEmail}
+            disabled={savingEmail || isEmailInvalid}
             aria-label="Add email"
             title="Add email"
           >
             +
           </button>
+          {isEmailInvalid && emailInput && (
+            <p className="error-text">Enter a valid email address</p>
+          )}
         </div>
 
         <div className="chips-wrap">
@@ -443,7 +464,7 @@ export default function SettingsForm() {
         <div className="severity-card-content">
             <input
                 type="range"
-                min="0"
+                min="0.1"
                 max="10"
                 step="0.1"
                 value={minimumSeverityScore}
