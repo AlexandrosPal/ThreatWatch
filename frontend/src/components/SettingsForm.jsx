@@ -60,6 +60,21 @@ export default function SettingsForm() {
   const [severitySaved, setSeveritySaved] = useState(false);
   const [earlyAlerts, setEarlyAlerts] = useState(false);
   const [savingEarlyAlerts, setSavingEarlyAlerts] = useState(false);
+  const [emailProviderHost, setEmailProviderHost] = useState("");
+  const [emailProviderPort, setEmailProviderPort] = useState("");
+  const [emailProviderUsername, setEmailProviderUsername] = useState("");
+  const [emailProviderPassword, setEmailProviderPassword] = useState("");
+  const [savingEmailProvider, setSavingEmailProvider] = useState(false);
+  const [emailProviderSaved, setEmailProviderSaved] = useState(false);
+  const isEmailProviderPortInvalid =
+    emailProviderPort !== "" && !/^\d+$/.test(emailProviderPort);
+
+  const isEmailProviderInvalid =
+    emailProviderHost.trim() === "" ||
+    emailProviderPort.trim() === "" ||
+    emailProviderUsername.trim() === "" ||
+    emailProviderPassword.trim() === "" ||
+    isEmailProviderPortInvalid;
 
   const percent = (minimumSeverityScore / 10) * 100;
   const color = getSeverityMeta(minimumSeverityScore).color;
@@ -90,6 +105,10 @@ export default function SettingsForm() {
       setEnabled(String(data?.enabled).toLowerCase() === "true");
       setMinimumSeverityScore(data?.severityThreshold || "7.0");
       setEarlyAlerts(String(data?.earlyAlerts).toLowerCase() === "true");
+      setEmailProviderHost(data?.emailProviderHost || "");
+      setEmailProviderPort(data?.emailProviderPort || "");
+      setEmailProviderUsername(data?.emailProviderUsername || "");
+      setEmailProviderPassword("");
     } catch (err) {
       console.error(err);
       alert("Failed to load settings");
@@ -156,6 +175,26 @@ export default function SettingsForm() {
       alert("Failed to add email");
     } finally {
       setSavingEmail(false);
+    }
+  }
+
+  async function handleSaveEmailProvider() {
+    try {
+      setSavingEmailProvider(true);
+
+      await patchSettings({
+        emailProviderHost: emailProviderHost.trim(),
+        emailProviderPort: emailProviderPort.trim(),
+        emailProviderUsername: emailProviderUsername.trim(),
+        emailProviderPassword: emailProviderPassword,
+      });
+
+      flashSaved(setEmailProviderSaved);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to save email provider settings");
+    } finally {
+      setSavingEmailProvider(false);
     }
   }
 
@@ -294,6 +333,65 @@ export default function SettingsForm() {
           >
             {savingBatch ? "Saving..." : "Save"}
           </button>
+        </div>
+      </section>
+
+      <section className="card">
+        <div className="card-header">
+          <div>
+            <h2>Email Provider</h2>
+            <p>Configure the SMTP server used to send vulnerability alerts.</p>
+          </div>
+        </div>
+
+        <div className="provider-row">
+          <input
+            className="text-input"
+            type="text"
+            value={emailProviderHost}
+            onChange={(e) => setEmailProviderHost(e.target.value)}
+            placeholder="SMTP host"
+          />
+
+          <input
+            className="text-input provider-port-input"
+            type="text"
+            value={emailProviderPort}
+            onChange={(e) => setEmailProviderPort(e.target.value)}
+            placeholder="Port"
+          />
+        </div>
+
+        <div className="provider-row">
+          <input
+            className="text-input"
+            type="text"
+            value={emailProviderUsername}
+            onChange={(e) => setEmailProviderUsername(e.target.value)}
+            placeholder="Username"
+          />
+
+          <input
+            className="text-input"
+            type="password"
+            value={emailProviderPassword}
+            onChange={(e) => setEmailProviderPassword(e.target.value)}
+            placeholder="Leave empty to keep current password"
+          />
+        </div>
+
+        <div style={{ marginTop: "16px" }}>
+          <div className="save-action-wrap">
+            <button
+              type="button"
+              className="primary-button"
+              onClick={handleSaveEmailProvider}
+            >
+              {savingEmailProvider ? "Saving..." : "Save"}
+            </button>
+
+            <span className={`save-check ${emailProviderSaved ? "visible" : ""}`}>✓</span>
+          </div>
         </div>
       </section>
 

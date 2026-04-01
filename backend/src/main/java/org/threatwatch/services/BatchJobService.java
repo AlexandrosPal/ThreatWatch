@@ -3,15 +3,14 @@ package org.threatwatch.services;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.threatwatch.dtos.SettingsResponseDto;
+import org.threatwatch.models.CveAlertItem;
 import org.threatwatch.models.ParsedCveModel;
 import tools.jackson.databind.JsonNode;
 
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 @Service
 public class BatchJobService {
@@ -25,6 +24,9 @@ public class BatchJobService {
 
     @Value("${email.cve.description.product.length.lookup}")
     private int descriptionProductLookupLength;
+
+    @Value("${backend.nvd.requests.interval}")
+    private int nvdReqeustsInterval;
 
     public BatchJobService(EmailService emailService, SettingsService settingsService, ProductsService productsService, NvdRestService nvdRestService, CveParserService cveParserService, CveStateService cveStateService) {
         this.emailService = emailService;
@@ -54,15 +56,16 @@ public class BatchJobService {
 
         String publishEndDatetime = dateTimeFormatter.format(rawPublishEndDatetime);
         String publishStartDatetime = dateTimeFormatter.format(rawPublishStartDatetime);
-        Set<String> products = settingsService.retrieveSettings().getProductsSelected();
+        Set<String> products = settings.getProductsSelected();
 
         StringBuilder cveListHtml = new StringBuilder();
         String html = emailService.loadHtmlTemplate();
         Set<String> emails = settings.getEmails();
         Set<String> cveIdsToSend = new HashSet<>();
+        List<CveAlertItem> cvesToSend = new ArrayList<>();
 
         for (String product : products) {
-            Thread.sleep(6000);
+            Thread.sleep(nvdReqeustsInterval);
             JsonNode response = nvdRestService.getRecentVulnerabilitiesByProduct(product.toLowerCase(), publishStartDatetime, publishEndDatetime);
             JsonNode vulnerabilities = response.path("vulnerabilities");
 
@@ -75,19 +78,36 @@ public class BatchJobService {
 
                 boolean cveAlreadyPresent = cveIdsToSend.contains(cveId);
                 boolean isPastCve = !cveStateService.isNewCve(cveId);
-                boolean outsideSeverityThreshold = Float.parseFloat(parsedCve.getScore()) < Float.parseFloat(settings.getSeverityThreshold());
-                boolean earlyCve = Objects.equals(parsedCve.getScore(), "-1");
-                boolean earlyAlertsEnabled = Boolean.parseBoolean(settingsService.retrieveSettings().getEarlyAlerts());
+                boolean earlyCve = Objects.equals(String.valueOf(parsedCve.getScore()), "-1");
+                boolean outsideSeverityThreshold = !earlyCve && Float.parseFloat(parsedCve.getScore()) < Float.parseFloat(settings.getSeverityThreshold());
+                boolean earlyAlertsEnabled = Boolean.parseBoolean(settings.getEarlyAlerts());
 
                 if (!descriptionMatchesProduct(description, product) || cveAlreadyPresent || isPastCve || (outsideSeverityThreshold && !earlyCve) || (earlyCve && !earlyAlertsEnabled)) {
                     continue;
                 }
 
                 cveIdsToSend.add(cveId);
-
-                String cveHtml = emailService.buildCveHtml(product, parsedCve);
-                cveListHtml.append(cveHtml);
+                cvesToSend.add(new CveAlertItem(
+                        product,
+                        parsedCve.getCveId(),
+                        parsedCve.getDescription(),
+                        parsedCve.getSeverity(),
+                        Float.valueOf(parsedCve.getScore()),
+                        parsedCve.getPublished()
+                ));
             }
+        }
+
+        cvesToSend.sort(
+                Comparator.comparing(
+                        CveAlertItem::getScore,
+                        Comparator.nullsLast(Comparator.reverseOrder())
+                )
+        );
+
+        for (CveAlertItem cve : cvesToSend) {
+            String cveHtml = emailService.buildCveHtml(cve.getProduct(), cve);
+            cveListHtml.append(cveHtml);
         }
 
         if (!cveIdsToSend.isEmpty()) {

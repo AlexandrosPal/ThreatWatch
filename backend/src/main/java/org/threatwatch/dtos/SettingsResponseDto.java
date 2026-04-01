@@ -14,8 +14,12 @@ public class SettingsResponseDto {
     private Set<String> productsSelected;
     private String severityThreshold;
     private String earlyAlerts;
+    private String emailProviderHost;
+    private String emailProviderPort;
+    private String emailProviderUsername;
+    private String emailProviderPassword;
 
-    public SettingsResponseDto(String batchInterval, String lookbackWindow, String deduplicationWindow, Set<String> emails, Set<String> notificationTypes, String enabled, Set<String> supportedProducts, Set<String> productsSelected, String severityThreshold, String earlyAlerts) {
+    public SettingsResponseDto(String batchInterval, String lookbackWindow, String deduplicationWindow, Set<String> emails, Set<String> notificationTypes, String enabled, Set<String> supportedProducts, Set<String> productsSelected, String severityThreshold, String earlyAlerts, String emailProviderHost, String emailProviderPort, String emailProviderUsername, String emailProviderPassword) {
         this.batchInterval = batchInterval;
         this.lookbackWindow = lookbackWindow;
         this.deduplicationWindow = deduplicationWindow;
@@ -26,6 +30,10 @@ public class SettingsResponseDto {
         this.productsSelected = productsSelected;
         this.severityThreshold = severityThreshold;
         this.earlyAlerts = earlyAlerts;
+        this.emailProviderHost = emailProviderHost;
+        this.emailProviderPort = emailProviderPort;
+        this.emailProviderUsername = emailProviderUsername;
+        this.emailProviderPassword = emailProviderPassword;
     }
 
     public String getBatchInterval() { return this.batchInterval; }
@@ -47,4 +55,12 @@ public class SettingsResponseDto {
     public String getSeverityThreshold() { return this.severityThreshold; }
 
     public String getEarlyAlerts() { return earlyAlerts; }
+
+    public String getEmailProviderHost() { return this.emailProviderHost; }
+
+    public String getEmailProviderPort() { return this.emailProviderPort; }
+
+    public String getEmailProviderUsername() { return this.emailProviderUsername; }
+
+    public String privateGetEmailProviderPassword() { return this.emailProviderPassword; }
 }
