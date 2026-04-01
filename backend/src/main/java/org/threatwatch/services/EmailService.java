@@ -6,29 +6,65 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.threatwatch.dtos.SettingsResponseDto;
+import org.threatwatch.models.CveAlertItem;
 import org.threatwatch.models.ParsedCveModel;
 
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.Set;
 
 @Service
 public class EmailService {
 
-    private JavaMailSender mailSender;
+    private SettingsService settingsService;
 
     @Value("${email.cve.description.length.max}")
     private int maxDescriptionLength;
 
-    public EmailService(JavaMailSender mailSender) {
-        this.mailSender = mailSender;
+    private JavaMailSender createMailSender(String host, String port, String username, String password) {
+        JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
+
+        mailSender.setHost(host);
+        mailSender.setPort(Integer.parseInt(port));
+        mailSender.setUsername(username);
+        mailSender.setPassword(password);
+
+        Properties props = mailSender.getJavaMailProperties();
+        props.put("mail.transport.protocol", "smtp");
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.smtp.connectiontimeout", "5000");
+        props.put("mail.smtp.timeout", "5000");
+        props.put("mail.smtp.writetimeout", "5000");
+
+        return mailSender;
+    }
+
+    public EmailService(SettingsService settingsService) {
+        this.settingsService = settingsService;
+    }
+
+    public JavaMailSender buildMailSender() {
+        SettingsResponseDto settings = this.settingsService.retrieveSettings();
+
+        return createMailSender(
+                settings.getEmailProviderHost(),
+                settings.getEmailProviderPort(),
+                settings.getEmailProviderUsername(),
+                settings.privateGetEmailProviderPassword()
+        );
     }
 
     public void sendEmail(Set<String> recipients, String subject, String body) throws Exception {
+        JavaMailSender dynamicMailSender = buildMailSender();
+
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(String.valueOf(new InternetAddress(
                 "no.reply.threatwatch@gmail.com",
@@ -38,7 +74,7 @@ public class EmailService {
         message.setSubject(subject);
         message.setText(body);
 
-        mailSender.send(message);
+        dynamicMailSender.send(message);
     }
 
     public String loadHtmlTemplate() throws Exception {
@@ -49,7 +85,9 @@ public class EmailService {
     }
 
     public void sendHtmlEmail(Set<String> recipients, String subject, String body) throws Exception {
-        MimeMessage message = mailSender.createMimeMessage();
+        JavaMailSender dynamicMailSender = buildMailSender();
+
+        MimeMessage message = dynamicMailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
         message.setFrom(new InternetAddress(
@@ -62,10 +100,10 @@ public class EmailService {
         helper.setText(body, true);
         message.setContent(body, "text/html; charset=utf-8");
 
-        mailSender.send(message);
+        dynamicMailSender.send(message);
     }
 
-    public String buildCveHtml(String product, ParsedCveModel cve) {
+    public String buildCveHtml(String product, CveAlertItem cve) {
         String color = switch (cve.getSeverity()) {
             case "CRITICAL" -> "#b42318";
             case "HIGH" -> "#d92d20";
@@ -78,18 +116,18 @@ public class EmailService {
                 ? cve.getDescription().substring(0, maxDescriptionLength) + "..."
                 : cve.getDescription();
 
-        String score = "-1".equals(cve.getScore()) ? "" : cve.getScore();
+        String score = "-1".equals(cve.getScore()) ? "" : String.valueOf(cve.getScore());
         String scoreHtml = score.isEmpty() ? "" : "<span class=\"score\">" + score + "</span>";
 
         return "<div class=\"card\" style=\"border:1px solid #e5e7eb;padding:12px;margin-bottom:8px;\">"
-                + "<div style=\"font-weight:bold;\">" + product + " | " + cve.getCveId() + "</div>"
+                + "<div style=\"font-weight:bold;\">" + product + " | " + cve.getId() + "</div>"
                 + "<div style=\"font-size:12px;color:#6b7280;\">" + cve.getPublished() + "</div>"
                 + "<div style=\"margin-top:6px;\">"
                 + "<span class=\"badge\" style=\"background:" + color + ";color:white;padding:3px 6px;font-size:11px;\">" + cve.getSeverity() + "</span>"
                 + (score.isEmpty() ? "" : "<span style=\"margin-left:6px;\">" + score + "</span>")
                 + "</div>"
                 + "<div style=\"margin-top:8px;font-size:13px;\">" + desc + "</div>"
-                + "<a href=\"https://nvd.nist.gov/vuln/detail/" + cve.getCveId() + "\" style=\"color:#2563eb;font-size:12px;text-decoration: none;\">View →</a>"
+                + "<a href=\"https://nvd.nist.gov/vuln/detail/" + cve.getId() + "\" style=\"color:#2563eb;font-size:12px;text-decoration: none;\">View →</a>"
                 + "</div>";
     }
 }

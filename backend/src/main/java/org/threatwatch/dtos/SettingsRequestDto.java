@@ -13,6 +13,10 @@ public class SettingsRequestDto {
     private String productAddition;
     private String severityThreshold;
     private String earlyAlerts;
+    private String emailProviderHost;
+    private String emailProviderPort;
+    private String emailProviderUsername;
+    private String emailProviderPassword;
 
     public Integer getBatchInterval() { return batchInterval; }
 
@@ -24,7 +28,15 @@ public class SettingsRequestDto {
 
     public String getProductAddition() { return this.productAddition; }
 
-    public String getSeverityThreshold() {return severityThreshold; }
+    public String getSeverityThreshold() { return this.severityThreshold; }
 
-    public String getEarlyAlerts() { return earlyAlerts; }
+    public String getEarlyAlerts() { return this.earlyAlerts; }
+
+    public String getEmailProviderHost() { return this.emailProviderHost; }
+
+    public String getEmailProviderPort() { return this.emailProviderPort; }
+
+    public String getEmailProviderUsername() { return this.emailProviderUsername; }
+
+    public String getEmailProviderPassword() { return this.emailProviderPassword; }
 }

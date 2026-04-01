@@ -25,6 +25,10 @@ public class SettingsServiceImpl implements SettingsService {
     private Set<String> productsSelected;
     private String severityThreshold;
     private String earlyAlerts;
+    private String emailProviderHost;
+    private String emailProviderPort;
+    private String emailProviderUsername;
+    private String emailProviderPassword;
 
     public SettingsServiceImpl(StringRedisTemplate redisTemplate, ProductsService productsService) {
         this.redisTemplate = redisTemplate;
@@ -47,7 +51,12 @@ public class SettingsServiceImpl implements SettingsService {
         Set<String> supportedProducts = productsService.getProducts().keySet();
         this.productsSelected = redisTemplate.opsForSet().members("settings:productsSelected");
 
-        return new SettingsResponseDto(this.batchInterval, this.lookbackWindow, this.deduplicationWindow, this.emails, this.notificationTypes, this.enabled, supportedProducts, this.productsSelected, this.severityThreshold, this.earlyAlerts);
+        this.emailProviderHost = redisTemplate.opsForValue().get("settings:emailProviderHost");
+        this.emailProviderPort = redisTemplate.opsForValue().get("settings:emailProviderPort");
+        this.emailProviderUsername = redisTemplate.opsForValue().get("settings:emailProviderUsername");
+        this.emailProviderPassword = redisTemplate.opsForValue().get("settings:emailProviderPassword");
+
+        return new SettingsResponseDto(this.batchInterval, this.lookbackWindow, this.deduplicationWindow, this.emails, this.notificationTypes, this.enabled, supportedProducts, this.productsSelected, this.severityThreshold, this.earlyAlerts, this.emailProviderHost, this.emailProviderPort, this.emailProviderUsername, this.emailProviderPassword);
     }
 
     @Override
@@ -59,6 +68,10 @@ public class SettingsServiceImpl implements SettingsService {
         String productAddition = request.getProductAddition();
         String severityThreshold = request.getSeverityThreshold();
         String earlyAlerts = request.getEarlyAlerts();
+        String emailProviderHost = request.getEmailProviderHost();
+        String emailProviderPort = request.getEmailProviderPort();
+        String emailProviderUsername = request.getEmailProviderUsername();
+        String emailProviderPassword = request.getEmailProviderPassword();
 
         if (batchInterval != null) {
             redisTemplate.opsForValue().set("settings:batchInterval", String.valueOf(batchInterval).replace(".0", ""));
@@ -104,6 +117,22 @@ public class SettingsServiceImpl implements SettingsService {
 
         if (earlyAlerts != null) {
             redisTemplate.opsForValue().set("settings:earlyAlerts", earlyAlerts);
+        }
+
+        if (emailProviderHost != null) {
+            redisTemplate.opsForValue().set("settings:emailProviderHost", String.valueOf(emailProviderHost));
+        }
+
+        if (emailProviderPort != null) {
+            redisTemplate.opsForValue().set("settings:emailProviderPort", emailProviderPort);
+        }
+
+        if (emailProviderUsername != null) {
+            redisTemplate.opsForValue().set("settings:emailProviderUsername", emailProviderUsername);
+        }
+
+        if (emailProviderPassword != null) {
+            redisTemplate.opsForValue().set("settings:emailProviderPassword", emailProviderPassword);
         }
     }
 }
