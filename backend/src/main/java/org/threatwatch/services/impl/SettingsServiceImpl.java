@@ -131,7 +131,7 @@ public class SettingsServiceImpl implements SettingsService {
             redisTemplate.opsForValue().set("settings:emailProviderUsername", emailProviderUsername);
         }
 
-        if (emailProviderPassword != null) {
+        if (emailProviderPassword != null && !emailProviderPassword.isEmpty()) {
             redisTemplate.opsForValue().set("settings:emailProviderPassword", emailProviderPassword);
         }
     }

@@ -1,5 +1,6 @@
 package org.threatwatch.services;
 
+import jakarta.mail.MessagingException;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,7 +29,7 @@ public class EmailService {
     @Value("${email.cve.description.length.max}")
     private int maxDescriptionLength;
 
-    private JavaMailSender createMailSender(String host, String port, String username, String password) {
+    private JavaMailSenderImpl createMailSender(String host, String port, String username, String password) {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
 
         mailSender.setHost(host);
@@ -51,7 +52,7 @@ public class EmailService {
         this.settingsService = settingsService;
     }
 
-    public JavaMailSender buildMailSender() {
+    public JavaMailSenderImpl buildMailSender() {
         SettingsResponseDto settings = this.settingsService.retrieveSettings();
 
         return createMailSender(
@@ -62,8 +63,22 @@ public class EmailService {
         );
     }
 
+    public boolean validEmailConnection() {
+        JavaMailSenderImpl dynamicMailSender = buildMailSender();
+        boolean validEmailConnection = true;
+
+        try {
+            dynamicMailSender.testConnection();
+
+        } catch (MessagingException e) {
+            validEmailConnection = false;
+        }
+
+        return validEmailConnection;
+    }
+
     public void sendEmail(Set<String> recipients, String subject, String body) throws Exception {
-        JavaMailSender dynamicMailSender = buildMailSender();
+        JavaMailSenderImpl dynamicMailSender = buildMailSender();
 
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(String.valueOf(new InternetAddress(

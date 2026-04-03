@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import org.threatwatch.dtos.ApiResponseDto;
 import org.threatwatch.dtos.SettingsResponseDto;
 import org.threatwatch.dtos.SettingsRequestDto;
+import org.threatwatch.services.EmailService;
 import org.threatwatch.services.SettingsService;
 
 import java.time.Instant;
@@ -17,9 +18,11 @@ import java.util.UUID;
 public class SettingsController {
 
     SettingsService settingsService;
+    EmailService emailService;
 
-    public SettingsController(SettingsService settingsService) {
+    public SettingsController(SettingsService settingsService, EmailService emailService) {
         this.settingsService = settingsService;
+        this.emailService = emailService;
     }
 
     @GetMapping
@@ -45,6 +48,17 @@ public class SettingsController {
                 UUID.randomUUID().toString(),
                 "ok",
                 "Settings updated"
+        ));
+    }
+
+    @GetMapping("/email/connection")
+    public ResponseEntity<ApiResponseDto> testEmailProviderConnection() {
+
+        return ResponseEntity.accepted().body(new ApiResponseDto(
+                Instant.now(),
+                UUID.randomUUID().toString(),
+                "ok",
+                emailService.validEmailConnection()
         ));
     }
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getSettings, patchSettings } from "../services/api";
+import { testEmailConnection , getSettings, patchSettings } from "../services/api";
 
 
 function formatHoursFromMinutes(minutes) {
@@ -56,7 +56,7 @@ export default function SettingsForm() {
   const [savingEnabled, setSavingEnabled] = useState(false);
   const [minimumSeverityScore, setMinimumSeverityScore] = useState("7.0");
   const [savingSeverity, setSavingSeverity] = useState(false);
-  // const [batchSaved, setBatchSaved] = useState(false);
+  const [batchSaved, setBatchSaved] = useState(false);
   const [severitySaved, setSeveritySaved] = useState(false);
   const [earlyAlerts, setEarlyAlerts] = useState(false);
   const [savingEarlyAlerts, setSavingEarlyAlerts] = useState(false);
@@ -68,6 +68,8 @@ export default function SettingsForm() {
   const [emailProviderSaved, setEmailProviderSaved] = useState(false);
   const isEmailProviderPortInvalid =
     emailProviderPort !== "" && !/^\d+$/.test(emailProviderPort);
+  const [testingEmailConnection, setTestingEmailConnection] = useState(false);
+  const [emailConnectionResult, setEmailConnectionResult] = useState(null);
 
   const isEmailProviderInvalid =
     emailProviderHost.trim() === "" ||
@@ -82,6 +84,7 @@ export default function SettingsForm() {
   const availableProducts = supportedProducts.filter(
     (product) => !selectedProducts.includes(product)
   );
+  const isProductInvalid = selectedProductInput.trim() === "" || availableProducts.length === 0;
 
   useEffect(() => {
     loadSettings();
@@ -114,6 +117,21 @@ export default function SettingsForm() {
       alert("Failed to load settings");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleTestEmailConnection() {
+    try {
+      setTestingEmailConnection(true);
+      setEmailConnectionResult(null);
+
+      const result = await testEmailConnection();
+      setEmailConnectionResult(result);
+    } catch (err) {
+      console.error(err);
+      setEmailConnectionResult(false);
+    } finally {
+      setTestingEmailConnection(false);
     }
   }
 
@@ -151,6 +169,8 @@ export default function SettingsForm() {
       });
 
       await loadSettings();
+      flashSaved(setBatchSaved);
+
     } catch (err) {
       console.error(err);
       alert("Failed to save batch interval");
@@ -325,14 +345,18 @@ export default function SettingsForm() {
             )}
           </div>
 
-          <button
-            type="button"
-            className="primary-button"
-            onClick={handleSaveBatchInterval}
-            disabled={savingBatch || isBatchInvalid}
-          >
-            {savingBatch ? "Saving..." : "Save"}
-          </button>
+          <div className="save-action-wrap">
+            <button
+              type="button"
+              className="primary-button"
+              onClick={handleSaveBatchInterval}
+              disabled={savingBatch || isBatchInvalid}
+            >
+              {savingBatch ? "Saving..." : "Save"}
+            </button>
+
+            <span className={`save-check ${batchSaved ? "visible" : ""}`}>✓</span>
+          </div>
         </div>
       </section>
 
@@ -349,7 +373,10 @@ export default function SettingsForm() {
             className="text-input"
             type="text"
             value={emailProviderHost}
-            onChange={(e) => setEmailProviderHost(e.target.value)}
+            onChange={(e) => {
+              setEmailProviderHost(e.target.value);
+              setEmailConnectionResult(null);
+            }}
             placeholder="SMTP host"
           />
 
@@ -357,7 +384,10 @@ export default function SettingsForm() {
             className="text-input provider-port-input"
             type="text"
             value={emailProviderPort}
-            onChange={(e) => setEmailProviderPort(e.target.value)}
+            onChange={(e) => {
+              setEmailProviderPort(e.target.value);
+              setEmailConnectionResult(null);
+            }}
             placeholder="Port"
           />
         </div>
@@ -367,7 +397,10 @@ export default function SettingsForm() {
             className="text-input"
             type="text"
             value={emailProviderUsername}
-            onChange={(e) => setEmailProviderUsername(e.target.value)}
+            onChange={(e) => {
+              setEmailProviderUsername(e.target.value);
+              setEmailConnectionResult(null);
+            }}
             placeholder="Username"
           />
 
@@ -375,12 +408,15 @@ export default function SettingsForm() {
             className="text-input"
             type="password"
             value={emailProviderPassword}
-            onChange={(e) => setEmailProviderPassword(e.target.value)}
+            onChange={(e) => {
+              setEmailProviderPassword(e.target.value);
+              setEmailConnectionResult(null);
+            }}
             placeholder="Leave empty to keep current password"
           />
         </div>
 
-        <div style={{ marginTop: "16px" }}>
+        <div className="provider-actions-row">
           <div className="save-action-wrap">
             <button
               type="button"
@@ -391,6 +427,25 @@ export default function SettingsForm() {
             </button>
 
             <span className={`save-check ${emailProviderSaved ? "visible" : ""}`}>✓</span>
+          </div>
+
+          <div className="connection-test-wrap">
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={handleTestEmailConnection}
+              disabled={testingEmailConnection}
+            >
+              {testingEmailConnection ? "Testing..." : "Test connection"}
+            </button>
+
+            {emailConnectionResult === true && (
+              <span className="connection-result success">Connected</span>
+            )}
+
+            {emailConnectionResult === false && (
+              <span className="connection-result error">Failed</span>
+            )}
           </div>
         </div>
       </section>
@@ -474,7 +529,7 @@ export default function SettingsForm() {
           <button
             className="icon-button"
             onClick={handleAddProduct}
-            disabled={savingProduct}
+            disabled={savingProduct || isProductInvalid}
             aria-label="Add product"
             title="Add product"
           >

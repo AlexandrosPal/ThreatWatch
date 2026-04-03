@@ -42,6 +42,11 @@ public class BatchJobService {
         return firstPart.toLowerCase().contains(product.toLowerCase());
     }
 
+    private boolean referencesMatchProduct(List<String> references, String product) {
+        return references.stream()
+                .anyMatch(url -> url.toLowerCase().contains(product.toLowerCase()));
+    }
+
     public void executeScheduledRun() throws Exception {
 
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter
@@ -75,6 +80,7 @@ public class BatchJobService {
                 ParsedCveModel parsedCve = cveParserService.parseCve(cve);
                 String cveId = parsedCve.getCveId();
                 String description = parsedCve.getDescription();
+                List<String> references = parsedCve.getReferences();
 
                 boolean cveAlreadyPresent = cveIdsToSend.contains(cveId);
                 boolean isPastCve = !cveStateService.isNewCve(cveId);
@@ -82,7 +88,7 @@ public class BatchJobService {
                 boolean outsideSeverityThreshold = !earlyCve && Float.parseFloat(parsedCve.getScore()) < Float.parseFloat(settings.getSeverityThreshold());
                 boolean earlyAlertsEnabled = Boolean.parseBoolean(settings.getEarlyAlerts());
 
-                if (!descriptionMatchesProduct(description, product) || cveAlreadyPresent || isPastCve || (outsideSeverityThreshold && !earlyCve) || (earlyCve && !earlyAlertsEnabled)) {
+                if ((!descriptionMatchesProduct(description, product) || !referencesMatchProduct(references, product)) || cveAlreadyPresent || isPastCve || (outsideSeverityThreshold && !earlyCve) || (earlyCve && !earlyAlertsEnabled)) {
                     continue;
                 }
 
