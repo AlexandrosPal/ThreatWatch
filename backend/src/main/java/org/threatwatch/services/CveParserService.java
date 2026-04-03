@@ -6,6 +6,9 @@ import tools.jackson.databind.JsonNode;
 
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.stream.StreamSupport;
 
 @Service
@@ -49,7 +52,19 @@ public class CveParserService {
                     )
             );
 
-            return new ParsedCveModel(cveId, description, severity, score, published);
+            ArrayList<String> references = new ArrayList<>();
+            JsonNode referencesNode = cve.get("references");
+
+            if (referencesNode != null && referencesNode.isArray()) {
+                for (JsonNode ref : referencesNode) {
+                    JsonNode urlNode = ref.get("url");
+                    if (urlNode != null && !urlNode.isNull()) {
+                        references.add(urlNode.asText());
+                    }
+                }
+            }
+
+            return new ParsedCveModel(cveId, description, severity, score, published, references);
         }
     }
 
