@@ -16,123 +16,175 @@ public class SettingsServiceImpl implements SettingsService {
     private final StringRedisTemplate redisTemplate;
     private final ProductsService productsService;
 
-    private String batchInterval;
-    private String lookbackWindow;
-    private String deduplicationWindow;
-    private Set<String> emails;
-    private Set<String> notificationTypes;
-    private String enabled;
-    private Set<String> productsSelected;
-    private String severityThreshold;
-    private String earlyAlerts;
-    private String emailProviderHost;
-    private String emailProviderPort;
-    private String emailProviderUsername;
-    private String emailProviderPassword;
+    private static final String SETTINGS_BATCH_INTERVAL_KEY = "settings:batchInterval";
+    private static final String SETTINGS_LOOKBACK_WINDOW_KEY = "settings:lookbackWindow";
+    private static final String SETTINGS_DEDUPLICATION_WINDOW_KEY = "settings:deduplicationWindow";
+    private static final String SETTINGS_ENABLED_KEY = "settings:enabled";
+    private static final String SETTINGS_SEVERITY_THRESHOLD_KEY = "settings:severityThreshold";
+    private static final String SETTINGS_EARLY_ALERTS_KEY = "settings:earlyAlerts";
+    private static final String SETTINGS_EMAILS_KEY = "settings:emails";
+    private static final String SETTINGS_NOTIFICATION_TYPES_KEY = "settings:notificationTypes";
+    private static final String SETTINGS_PRODUCTS_SELECTED_KEY = "settings:productsSelected";
+    private static final String SETTINGS_EMAIL_PROVIDER_HOST_KEY = "settings:emailProviderHost";
+    private static final String SETTINGS_EMAIL_PROVIDER_PORT_KEY = "settings:emailProviderPort";
+    private static final String SETTINGS_EMAIL_PROVIDER_USERNAME_KEY = "settings:emailProviderUsername";
+    private static final String SETTINGS_EMAIL_PROVIDER_PASSWORD_KEY = "settings:emailProviderPassword";
+    private static final String SETTINGS_NVD_API_KEY_KEY = "settings:nvdApiKey";
 
     public SettingsServiceImpl(StringRedisTemplate redisTemplate, ProductsService productsService) {
         this.redisTemplate = redisTemplate;
         this.productsService = productsService;
     }
 
+    private void updateBatchInterval(Integer batchInterval) {
+        if (batchInterval != null) {
+            redisTemplate.opsForValue().set(SETTINGS_BATCH_INTERVAL_KEY, String.valueOf(batchInterval).replace(".0", ""));
+            redisTemplate.opsForValue().set(SETTINGS_LOOKBACK_WINDOW_KEY, String.valueOf(batchInterval * 2).replace(".0", ""));
+            redisTemplate.opsForValue().set(SETTINGS_DEDUPLICATION_WINDOW_KEY, String.valueOf(batchInterval * 2.4).replace(".0", ""));
+        }
+    }
+
+    private void updateEnabledFlag(String enabled) {
+        if (enabled != null) {
+            redisTemplate.opsForValue().set(SETTINGS_ENABLED_KEY, enabled);
+        }
+    }
+
+    private void updateEmails(String email) {
+        if (email != null) {
+            if (Boolean.TRUE.equals(redisTemplate.opsForSet().isMember(SETTINGS_EMAILS_KEY, email))) {
+                redisTemplate.opsForSet().remove(SETTINGS_EMAILS_KEY, email);
+            } else {
+                redisTemplate.opsForSet().add(SETTINGS_EMAILS_KEY, email);
+            }
+        }
+    }
+
+    private void updateNotificationTypes(NotificationTypes notificationType) {
+        if (notificationType != null) {
+            if (Boolean.TRUE.equals(redisTemplate.opsForSet().isMember(SETTINGS_NOTIFICATION_TYPES_KEY, String.valueOf(notificationType)))) {
+                redisTemplate.opsForSet().remove(SETTINGS_NOTIFICATION_TYPES_KEY, String.valueOf(notificationType));
+            } else {
+                redisTemplate.opsForSet().add(SETTINGS_NOTIFICATION_TYPES_KEY, String.valueOf(notificationType));
+            }
+        }
+    }
+
+    private void updateSupportedProducts(String productAddition) {
+        if (productAddition != null) {
+            Boolean isMember = redisTemplate.opsForSet().isMember(SETTINGS_PRODUCTS_SELECTED_KEY, productAddition);
+            if (Boolean.TRUE.equals(isMember)) {
+                redisTemplate.opsForSet().remove(SETTINGS_PRODUCTS_SELECTED_KEY, productAddition);
+            } else {
+                redisTemplate.opsForSet().add(SETTINGS_PRODUCTS_SELECTED_KEY, productAddition);
+            }
+        }
+    }
+
+    private void updateSeverityThreshold(String severityThreshold) {
+        if (severityThreshold != null) {
+            redisTemplate.opsForValue().set(SETTINGS_SEVERITY_THRESHOLD_KEY, severityThreshold);
+        }
+    }
+
+    private void updateEarlyAlertsFlag(String earlyAlerts) {
+        if (earlyAlerts != null) {
+            redisTemplate.opsForValue().set(SETTINGS_EARLY_ALERTS_KEY, earlyAlerts);
+        }
+    }
+
+    private void updateEmailProviderHost(String emailProviderHost) {
+        if (emailProviderHost != null) {
+            redisTemplate.opsForValue().set(SETTINGS_EMAIL_PROVIDER_HOST_KEY, emailProviderHost);
+        }
+    }
+
+    private void updateEmailProviderPort(String emailProviderPort) {
+        if (emailProviderPort != null) {
+            redisTemplate.opsForValue().set(SETTINGS_EMAIL_PROVIDER_PORT_KEY, emailProviderPort);
+        }
+    }
+
+    private void updateEmailProviderUsername(String emailProviderUsername) {
+        if (emailProviderUsername != null) {
+            redisTemplate.opsForValue().set(SETTINGS_EMAIL_PROVIDER_USERNAME_KEY, emailProviderUsername);
+        }
+    }
+
+    private void updateEmailProviderPassword(String emailProviderPassword) {
+        if (emailProviderPassword != null) {
+            redisTemplate.opsForValue().set(SETTINGS_EMAIL_PROVIDER_PASSWORD_KEY, emailProviderPassword);
+        }
+    }
+
+    private void updateNvdApiKey(String nvdApiKey) {
+        if (nvdApiKey != null) {
+            redisTemplate.opsForValue().set(SETTINGS_NVD_API_KEY_KEY, nvdApiKey);
+        }
+    }
+
     @Override
     public SettingsResponseDto retrieveSettings() {
 
-        this.batchInterval = redisTemplate.opsForValue().get("settings:batchInterval");
-        this.lookbackWindow = redisTemplate.opsForValue().get("settings:lookbackWindow");
-        this.deduplicationWindow = redisTemplate.opsForValue().get("settings:deduplicationWindow");
-        this.enabled = redisTemplate.opsForValue().get("settings:enabled");
-        this.severityThreshold = redisTemplate.opsForValue().get("settings:severityThreshold");
-        this.earlyAlerts = redisTemplate.opsForValue().get("settings:earlyAlerts");
+        String batchInterval = redisTemplate.opsForValue().get(SETTINGS_BATCH_INTERVAL_KEY);
+        String lookbackWindow = redisTemplate.opsForValue().get(SETTINGS_LOOKBACK_WINDOW_KEY);
+        String deduplicationWindow = redisTemplate.opsForValue().get(SETTINGS_DEDUPLICATION_WINDOW_KEY);
+        String enabled = redisTemplate.opsForValue().get(SETTINGS_ENABLED_KEY);
+        String severityThreshold = redisTemplate.opsForValue().get(SETTINGS_SEVERITY_THRESHOLD_KEY);
+        String earlyAlerts = redisTemplate.opsForValue().get(SETTINGS_EARLY_ALERTS_KEY);
 
-        this.emails = redisTemplate.opsForSet().members("settings:emails");
-        this.notificationTypes = redisTemplate.opsForSet().members("settings:notificationTypes");
+        Set<String> emails = redisTemplate.opsForSet().members(SETTINGS_EMAILS_KEY);
+        Set<String> notificationTypes = redisTemplate.opsForSet().members(SETTINGS_NOTIFICATION_TYPES_KEY);
 
         Set<String> supportedProducts = productsService.getProducts().keySet();
-        this.productsSelected = redisTemplate.opsForSet().members("settings:productsSelected");
+        Set<String> productsSelected = redisTemplate.opsForSet().members(SETTINGS_PRODUCTS_SELECTED_KEY);
 
-        this.emailProviderHost = redisTemplate.opsForValue().get("settings:emailProviderHost");
-        this.emailProviderPort = redisTemplate.opsForValue().get("settings:emailProviderPort");
-        this.emailProviderUsername = redisTemplate.opsForValue().get("settings:emailProviderUsername");
-        this.emailProviderPassword = redisTemplate.opsForValue().get("settings:emailProviderPassword");
+        String emailProviderHost = redisTemplate.opsForValue().get(SETTINGS_EMAIL_PROVIDER_HOST_KEY);
+        String emailProviderPort = redisTemplate.opsForValue().get(SETTINGS_EMAIL_PROVIDER_PORT_KEY);
+        String emailProviderUsername = redisTemplate.opsForValue().get(SETTINGS_EMAIL_PROVIDER_USERNAME_KEY);
+        String emailProviderPassword = redisTemplate.opsForValue().get(SETTINGS_EMAIL_PROVIDER_PASSWORD_KEY);
 
-        return new SettingsResponseDto(this.batchInterval, this.lookbackWindow, this.deduplicationWindow, this.emails, this.notificationTypes, this.enabled, supportedProducts, this.productsSelected, this.severityThreshold, this.earlyAlerts, this.emailProviderHost, this.emailProviderPort, this.emailProviderUsername, this.emailProviderPassword);
+        String nvdApiKey = redisTemplate.opsForValue().get(SETTINGS_NVD_API_KEY_KEY);
+        String nvdApiKeyProvided;
+        if (nvdApiKey != null && !nvdApiKey.isEmpty()) {
+            nvdApiKeyProvided = "true";
+        } else {
+            nvdApiKeyProvided = "false";
+        }
+
+        return SettingsResponseDto.builder()
+                .batchInterval(batchInterval)
+                .lookbackWindow(lookbackWindow)
+                .deduplicationWindow(deduplicationWindow)
+                .emails(emails)
+                .notificationTypes(notificationTypes)
+                .enabled(enabled)
+                .supportedProducts(supportedProducts)
+                .productsSelected(productsSelected)
+                .severityThreshold(severityThreshold)
+                .earlyAlerts(earlyAlerts)
+                .emailProviderHost(emailProviderHost)
+                .emailProviderPort(emailProviderPort)
+                .emailProviderUsername(emailProviderUsername)
+                .emailProviderPassword(emailProviderPassword)
+                .nvdApiKey(nvdApiKey)
+                .nvdApiKeyProvided(nvdApiKeyProvided)
+                .build();
     }
 
     @Override
     public void updateSettings(SettingsRequestDto request) {
-        Integer batchInterval = request.getBatchInterval();
-        String enabled = request.getEnabled();
-        String email = request.getEmail();
-        NotificationTypes notificationType = request.getNotificationType();
-        String productAddition = request.getProductAddition();
-        String severityThreshold = request.getSeverityThreshold();
-        String earlyAlerts = request.getEarlyAlerts();
-        String emailProviderHost = request.getEmailProviderHost();
-        String emailProviderPort = request.getEmailProviderPort();
-        String emailProviderUsername = request.getEmailProviderUsername();
-        String emailProviderPassword = request.getEmailProviderPassword();
-
-        if (batchInterval != null) {
-            redisTemplate.opsForValue().set("settings:batchInterval", String.valueOf(batchInterval).replace(".0", ""));
-            redisTemplate.opsForValue().set("settings:lookbackWindow", String.valueOf(batchInterval * 2).replace(".0", ""));
-            redisTemplate.opsForValue().set("settings:deduplicationWindow", String.valueOf(batchInterval * 2.4).replace(".0", ""));
-        }
-
-        if (enabled != null) {
-            redisTemplate.opsForValue().set("settings:enabled", enabled);
-        }
-
-        if (email != null) {
-            if (redisTemplate.opsForSet().isMember("settings:emails", email)) {
-                redisTemplate.opsForSet().remove("settings:emails", email);
-            } else {
-                redisTemplate.opsForSet().add("settings:emails", email);
-            }
-        }
-
-        if (notificationType != null) {
-            if (redisTemplate.opsForSet().isMember("settings:notificationTypes", String.valueOf(notificationType))) {
-                redisTemplate.opsForSet().remove("settings:notificationTypes", String.valueOf(notificationType));
-            } else {
-                redisTemplate.opsForSet().add("settings:notificationTypes", String.valueOf(notificationType));
-            }
-        }
-
-        if (productAddition != null) {
-            String normalizedProduct = productsService.normalizeProduct(
-                    request.getProductAddition()
-            );
-
-            if (redisTemplate.opsForSet().isMember("settings:productsSelected", productAddition)) {
-                redisTemplate.opsForSet().remove("settings:productsSelected", productAddition);
-            } else {
-                redisTemplate.opsForSet().add("settings:productsSelected", productAddition);
-            }
-        }
-
-        if (severityThreshold != null) {
-            redisTemplate.opsForValue().set("settings:severityThreshold", severityThreshold);
-        }
-
-        if (earlyAlerts != null) {
-            redisTemplate.opsForValue().set("settings:earlyAlerts", earlyAlerts);
-        }
-
-        if (emailProviderHost != null) {
-            redisTemplate.opsForValue().set("settings:emailProviderHost", String.valueOf(emailProviderHost));
-        }
-
-        if (emailProviderPort != null) {
-            redisTemplate.opsForValue().set("settings:emailProviderPort", emailProviderPort);
-        }
-
-        if (emailProviderUsername != null) {
-            redisTemplate.opsForValue().set("settings:emailProviderUsername", emailProviderUsername);
-        }
-
-        if (emailProviderPassword != null && !emailProviderPassword.isEmpty()) {
-            redisTemplate.opsForValue().set("settings:emailProviderPassword", emailProviderPassword);
-        }
+        updateBatchInterval(request.getBatchInterval());
+        updateEnabledFlag(request.getEnabled());
+        updateEmails(request.getEmail());
+        updateNotificationTypes(request.getNotificationType());
+        updateSupportedProducts(request.getProductAddition());
+        updateSeverityThreshold(request.getSeverityThreshold());
+        updateEarlyAlertsFlag(request.getEarlyAlerts());
+        updateEmailProviderHost(request.getEmailProviderHost());
+        updateEmailProviderPort(request.getEmailProviderPort());
+        updateEmailProviderUsername(request.getEmailProviderUsername());
+        updateEmailProviderPassword(request.getEmailProviderPassword());
+        updateNvdApiKey(request.getNvdApiKey());
     }
 }

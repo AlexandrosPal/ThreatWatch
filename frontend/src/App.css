@@ -111,8 +111,14 @@ input {
 }
 
 .input-row-top {
-  align-items: center;
+  align-items: flex-start;
   gap: 16px;
+}
+
+.input-row-top .save-action-wrap {
+  align-self: flex-start;
+  margin-top: 0;
+  padding-top: 0;
 }
 
 .field-block {
@@ -579,4 +585,14 @@ input[type="number"] {
     width: 100%;
     justify-content: space-between;
   }
+}
+
+.danger-button {
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.danger-button:hover:not(:disabled) {
+  background: #fee2e2;
 }

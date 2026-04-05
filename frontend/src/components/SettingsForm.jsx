@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { testEmailConnection , getSettings, patchSettings } from "../services/api";
+import { testEmailConnection , getSettings, patchSettings, testNvdConnection } from "../services/api";
 
 
 function formatHoursFromMinutes(minutes) {
@@ -39,8 +39,15 @@ function getSeverityMeta(score) {
 }
 
 export default function SettingsForm() {
+  const [nvdApiKey, setNvdApiKey] = useState("");
+  const [nvdApiKeyProvided, setNvdApiKeyProvided] = useState(false);
+  const [savingNvdApiKey, setSavingNvdApiKey] = useState(false);
+  const [nvdApiKeySaved, setNvdApiKeySaved] = useState(false);
   const [batchIntervalMinutes, setBatchIntervalMinutes] = useState("");
-  const isBatchInvalid = batchIntervalMinutes === "" || Number(batchIntervalMinutes) < 1;
+  const minBatchInterval = nvdApiKeyProvided ? 5 : 30;
+  const isBatchInvalid =
+    batchIntervalMinutes === "" ||
+    Number(batchIntervalMinutes) < minBatchInterval;
   const [emails, setEmails] = useState([]);
   const [emailInput, setEmailInput] = useState("");
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -70,6 +77,8 @@ export default function SettingsForm() {
     emailProviderPort !== "" && !/^\d+$/.test(emailProviderPort);
   const [testingEmailConnection, setTestingEmailConnection] = useState(false);
   const [emailConnectionResult, setEmailConnectionResult] = useState(null);
+  const [testingNvdConnection, setTestingNvdConnection] = useState(false);
+  const [nvdConnectionResult, setNvdConnectionResult] = useState(null);
 
   const isEmailProviderInvalid =
     emailProviderHost.trim() === "" ||
@@ -112,11 +121,51 @@ export default function SettingsForm() {
       setEmailProviderPort(data?.emailProviderPort || "");
       setEmailProviderUsername(data?.emailProviderUsername || "");
       setEmailProviderPassword("");
+      
+      const nvdProvided =
+        String(data?.nvdApiKeyProvided).toLowerCase() === "true";
+      
+        setNvdApiKeyProvided(String(data?.nvdApiKeyProvided).toLowerCase() === "true");
+      setNvdApiKey("");
+      
+      setNvdApiKeyProvided(nvdProvided);
+      setNvdApiKey("");
+
+      if (nvdProvided) {
+        try {
+          const result = await testNvdConnection();
+          setNvdConnectionResult(result);
+        } catch (err) {
+          console.error(err);
+          setNvdConnectionResult(false);
+        }
+      } else {
+        setNvdConnectionResult(null);
+      }
     } catch (err) {
       console.error(err);
       alert("Failed to load settings");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleClearNvdApiKey() {
+    try {
+      setSavingNvdApiKey(true);
+
+      await patchSettings({
+        nvdApiKey: ""
+      });
+
+      setNvdApiKey("");
+      setNvdApiKeyProvided(false);
+      setNvdConnectionResult(null);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to clear NVD API key");
+    } finally {
+      setSavingNvdApiKey(false);
     }
   }
 
@@ -302,6 +351,53 @@ export default function SettingsForm() {
     }
   }
 
+  async function handleTestNvdConnection() {
+    try {
+      setTestingNvdConnection(true);
+      setNvdConnectionResult(null);
+
+      const result = await testNvdConnection();
+      setNvdConnectionResult(result);
+    } catch (err) {
+      console.error(err);
+      setNvdConnectionResult(false);
+    } finally {
+      setTestingNvdConnection(false);
+    }
+  }
+
+  async function handleSaveNvdApiKey() {
+    try {
+      setSavingNvdApiKey(true);
+      setTestingNvdConnection(true);
+      setNvdConnectionResult(null);
+
+      const trimmedKey = nvdApiKey.trim();
+
+      if (!trimmedKey) {
+        return;
+      }
+
+      await patchSettings({
+        nvdApiKey: trimmedKey,
+      });
+
+      const result = await testNvdConnection();
+
+      setNvdConnectionResult(result);
+      setNvdApiKey("");
+      setNvdApiKeyProvided(result);
+      flashSaved(setNvdApiKeySaved);
+    } catch (err) {
+      console.error(err);
+      setNvdConnectionResult(false);
+      alert("Failed to save or validate NVD API key");
+    } finally {
+      setSavingNvdApiKey(false);
+      setTestingNvdConnection(false);
+    }
+  }
+
   if (loading) {
     return <p className="loading-text">Loading settings...</p>;
   }
@@ -340,7 +436,7 @@ export default function SettingsForm() {
 
             {isBatchInvalid && (
               <p className="error-text">
-                Minimum value is 1 minute
+                Minimum value is {minBatchInterval} minute{minBatchInterval > 1 ? "s" : ""}
               </p>
             )}
           </div>
@@ -412,7 +508,7 @@ export default function SettingsForm() {
               setEmailProviderPassword(e.target.value);
               setEmailConnectionResult(null);
             }}
-            placeholder="Leave empty to keep current password"
+            placeholder="Leave empty to keep current password if set"
           />
         </div>
 
@@ -660,6 +756,75 @@ export default function SettingsForm() {
                 <span className={`save-check ${severitySaved ? "visible" : ""}`}>✓</span>
               </div>
             </div>
+        </div>
+      </section>
+      <section className="card">
+        <div className="card-header">
+          <div>
+            <h2>NVD API Key</h2>
+            <p>
+              Add an NVD API key to allow shorter batch intervals and higher request throughput.
+            </p>
+          </div>
+        </div>
+
+        <div className="provider-row">
+          <input
+            className="text-input"
+            type="password"
+            value={nvdApiKey}
+            onChange={(e) => {
+              setNvdApiKey(e.target.value);
+              setNvdConnectionResult(null);
+            }}
+            placeholder="Leave empty to keep current key"
+          />
+        </div>
+
+        <div className="provider-actions-row">
+          <div className="save-action-wrap">
+            <button
+              type="button"
+              className="primary-button"
+              onClick={handleSaveNvdApiKey}
+              disabled={savingNvdApiKey || nvdApiKey.trim() === ""}
+            >
+              {savingNvdApiKey ? "Saving..." : "Save"}
+            </button>
+
+            <span className={`save-check ${nvdApiKeySaved ? "visible" : ""}`}>✓</span>
+          </div>
+
+          <div className="connection-test-wrap">
+            {nvdApiKeyProvided && (
+              <button
+                type="button"
+                className="secondary-button danger-button"
+                onClick={handleClearNvdApiKey}
+                disabled={savingNvdApiKey}
+              >
+                Clear key
+              </button>
+            )}
+
+            {testingNvdConnection && (
+              <span className="connection-result">Testing...</span>
+            )}
+
+            {!testingNvdConnection && nvdConnectionResult === true && (
+              <span className="connection-result success">Configured</span>
+            )}
+
+            {!testingNvdConnection && nvdConnectionResult === false && (
+              <span className="connection-result error">Invalid API key</span>
+            )}
+
+            {!testingNvdConnection && nvdConnectionResult === null && (
+              <span className={`connection-result ${nvdApiKeyProvided ? "success" : "error"}`}>
+                {nvdApiKeyProvided ? "API key configured" : "No API key configured"}
+              </span>
+            )}
+          </div>
         </div>
       </section>
     </div>

@@ -1,10 +1,12 @@
 package org.threatwatch.schedulers;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.mail.MessagingException;
 import org.springframework.stereotype.Component;
 import org.threatwatch.services.BatchJobService;
 import org.threatwatch.services.SettingsService;
 
+import java.io.IOException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -24,7 +26,7 @@ public class DynamicScheduler {
     }
 
     @PostConstruct
-    public void start() throws Exception {
+    public void start() {
         scheduleNextRun();
     }
 
@@ -38,13 +40,15 @@ public class DynamicScheduler {
                 if (enabled) {
                     batchJobService.executeScheduledRun();
                 }
-            } catch (Exception e) {
-                System.out.println("Error while running scheduled run");
+            } catch (IOException | MessagingException e) {
+                System.err.println("Error while running scheduled run");
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             } finally {
                 try {
                     scheduleNextRun();
                 } catch (Exception e) {
-                    System.out.println("Error in scheduling next run");
+                    System.err.println("Error in scheduling next run");
                 }
             }
         }, delay, TimeUnit.SECONDS);

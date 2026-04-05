@@ -7,8 +7,6 @@ import tools.jackson.databind.JsonNode;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.stream.StreamSupport;
 
 @Service
@@ -30,20 +28,25 @@ public class CveParserService {
                     .findFirst()
                     .orElse("");
             JsonNode metricsNode = cve.path("metrics");
-            String severity;
-            String score;
+            String severity = "UNKNOWN";
+            String score = "-1";
 
             if (!metricsNode.isEmpty()) {
-                JsonNode metrics = metricsNode.has("cvssMetricV40") ? metricsNode.get("cvssMetricV40") :
-                        metricsNode.has("cvssMetricV31") ? metricsNode.get("cvssMetricV31") :
-                                metricsNode.has("cvssMetricV30") ? metricsNode.get("cvssMetricV30") :
-                                        null;
-                JsonNode cvssData = metrics.get(0).path("cvssData");
-                severity = cvssData.path("baseSeverity").asString();
-                score = cvssData.path("baseScore").asString();
-            } else {
-                severity = "UNKNOWN";
-                score = "-1";
+                JsonNode metrics = null;
+
+                if (metricsNode.has("cvssMetricV40")) {
+                    metrics = metricsNode.get("cvssMetricV40");
+                } else if (metricsNode.has("cvssMetricV31")) {
+                    metrics = metricsNode.get("cvssMetricV31");
+                } else if (metricsNode.has("cvssMetricV30")) {
+                    metrics = metricsNode.get("cvssMetricV30");
+                }
+
+                if (metrics != null) {
+                    JsonNode cvssData = metrics.get(0).path("cvssData");
+                    severity = cvssData.path("baseSeverity").asString();
+                    score = cvssData.path("baseScore").asString();
+                }
             }
 
             String published = emailDateTimeFormatter.format(
@@ -59,7 +62,7 @@ public class CveParserService {
                 for (JsonNode ref : referencesNode) {
                     JsonNode urlNode = ref.get("url");
                     if (urlNode != null && !urlNode.isNull()) {
-                        references.add(urlNode.asText());
+                        references.add(urlNode.asString());
                     }
                 }
             }

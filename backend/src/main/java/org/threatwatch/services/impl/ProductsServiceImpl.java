@@ -8,33 +8,34 @@ import org.springframework.stereotype.Service;
 import org.threatwatch.models.ProductModel;
 import org.threatwatch.services.ProductsService;
 
+import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @Service
 public class ProductsServiceImpl implements ProductsService {
 
-    private Map<String, ArrayList<ProductModel>> supportedProducts;
+    private Map<String, List<ProductModel>> supportedProducts;
 
-    private Map<String, ArrayList<ProductModel>> loadProducts() throws Exception {
+    private Map<String, List<ProductModel>> loadProducts() throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         InputStream is = new ClassPathResource("products.json").getInputStream();
 
-        return mapper.readValue(is, new TypeReference<Map<String, ArrayList<ProductModel>>>() {});
+        return mapper.readValue(is, new TypeReference<>() {});
     }
 
     @PostConstruct
-    public void init() {
+    public void init() throws IOException {
         try {
             this.supportedProducts = loadProducts();
         } catch (Exception e) {
-            throw new RuntimeException("Failed to load products.json", e);
+            throw new IOException("Failed to load products.json", e);
         }
     }
 
     @Override
-    public Map<String, ArrayList<ProductModel>> getProducts() {
+    public Map<String, List<ProductModel>> getProducts() {
         return supportedProducts;
     }
 
