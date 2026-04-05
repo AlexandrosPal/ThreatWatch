@@ -112,7 +112,7 @@ public class SettingsServiceImpl implements SettingsService {
     }
 
     private void updateEmailProviderPassword(String emailProviderPassword) {
-        if (emailProviderPassword != null) {
+        if (emailProviderPassword != null && !emailProviderPassword.isEmpty()) {
             redisTemplate.opsForValue().set(SETTINGS_EMAIL_PROVIDER_PASSWORD_KEY, emailProviderPassword);
         }
     }
