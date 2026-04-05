@@ -696,7 +696,7 @@ export default function SettingsForm() {
           type="button"
           className={`toggle-switch ${earlyAlerts ? "active" : ""}`}
           onClick={handleToggleEarlyAlerts}
-          disabled={!enabled || savingEarlyAlerts}
+          disabled={savingEarlyAlerts}
         >
           <span className="toggle-thumb"></span>
         </button>
@@ -738,7 +738,7 @@ export default function SettingsForm() {
             </div>
 
             <div className="severity-footer">
-            <span className="muted-text">0.0</span>
+            <span className="muted-text">0.1</span>
             <span className="muted-text">10.0</span>
             </div>
 
