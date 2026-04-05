@@ -1,12 +1,12 @@
 package org.threatwatch.controllers;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.threatwatch.dtos.ApiResponseDto;
 import org.threatwatch.dtos.SettingsResponseDto;
 import org.threatwatch.dtos.SettingsRequestDto;
 import org.threatwatch.services.EmailService;
+import org.threatwatch.services.NvdRestService;
 import org.threatwatch.services.SettingsService;
 
 import java.time.Instant;
@@ -17,12 +17,14 @@ import java.util.UUID;
 @RequestMapping("/api/settings")
 public class SettingsController {
 
-    SettingsService settingsService;
-    EmailService emailService;
+    private final SettingsService settingsService;
+    private final EmailService emailService;
+    private final NvdRestService nvdRestService;
 
-    public SettingsController(SettingsService settingsService, EmailService emailService) {
+    public SettingsController(SettingsService settingsService, EmailService emailService, NvdRestService nvdRestService) {
         this.settingsService = settingsService;
         this.emailService = emailService;
+        this.nvdRestService = nvdRestService;
     }
 
     @GetMapping
@@ -59,6 +61,17 @@ public class SettingsController {
                 UUID.randomUUID().toString(),
                 "ok",
                 emailService.validEmailConnection()
+        ));
+    }
+
+    @GetMapping("/nvd/connection")
+    public ResponseEntity<ApiResponseDto> testNvdKeyConnection() {
+
+        return ResponseEntity.accepted().body(new ApiResponseDto(
+                Instant.now(),
+                UUID.randomUUID().toString(),
+                "ok",
+                this.nvdRestService.testApiKey()
         ));
     }
 

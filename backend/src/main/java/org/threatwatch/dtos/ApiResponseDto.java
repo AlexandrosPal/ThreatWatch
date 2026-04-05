@@ -4,10 +4,10 @@ import java.time.Instant;
 
 public class ApiResponseDto {
 
-    private Instant timestamp;
-    private String uuid;
-    private String status;
-    private Object response;
+    private final Instant timestamp;
+    private final String uuid;
+    private final String status;
+    private final Object response;
 
     public ApiResponseDto(Instant timestamp, String uuid, String status, Object response) {
         this.timestamp = timestamp;

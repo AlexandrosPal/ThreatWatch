@@ -1,40 +1,32 @@
 package org.threatwatch.dtos;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.Builder;
+
 import java.util.Set;
 
+@Builder
 public class SettingsResponseDto {
 
-    private String batchInterval;
-    private String lookbackWindow;
-    private String deduplicationWindow;
-    private Set<String> emails;
-    private Set<String> notificationTypes;
-    private String enabled;
-    private Set<String> supportedProducts;
-    private Set<String> productsSelected;
-    private String severityThreshold;
-    private String earlyAlerts;
-    private String emailProviderHost;
-    private String emailProviderPort;
-    private String emailProviderUsername;
-    private String emailProviderPassword;
+    private final String batchInterval;
+    private final String lookbackWindow;
+    private final String deduplicationWindow;
+    private final Set<String> emails;
+    private final Set<String> notificationTypes;
+    private final String enabled;
+    private final Set<String> supportedProducts;
+    private final Set<String> productsSelected;
+    private final String severityThreshold;
+    private final String earlyAlerts;
+    private final String emailProviderHost;
+    private final String emailProviderPort;
+    private final String emailProviderUsername;
+    private final String nvdApiKeyProvided;
 
-    public SettingsResponseDto(String batchInterval, String lookbackWindow, String deduplicationWindow, Set<String> emails, Set<String> notificationTypes, String enabled, Set<String> supportedProducts, Set<String> productsSelected, String severityThreshold, String earlyAlerts, String emailProviderHost, String emailProviderPort, String emailProviderUsername, String emailProviderPassword) {
-        this.batchInterval = batchInterval;
-        this.lookbackWindow = lookbackWindow;
-        this.deduplicationWindow = deduplicationWindow;
-        this.emails = emails;
-        this.notificationTypes = notificationTypes;
-        this.enabled = enabled;
-        this.supportedProducts = supportedProducts;
-        this.productsSelected = productsSelected;
-        this.severityThreshold = severityThreshold;
-        this.earlyAlerts = earlyAlerts;
-        this.emailProviderHost = emailProviderHost;
-        this.emailProviderPort = emailProviderPort;
-        this.emailProviderUsername = emailProviderUsername;
-        this.emailProviderPassword = emailProviderPassword;
-    }
+    @JsonIgnore
+    private final String emailProviderPassword;
+    @JsonIgnore
+    private final String nvdApiKey;
 
     public String getBatchInterval() { return this.batchInterval; }
 
@@ -62,5 +54,9 @@ public class SettingsResponseDto {
 
     public String getEmailProviderUsername() { return this.emailProviderUsername; }
 
-    public String privateGetEmailProviderPassword() { return this.emailProviderPassword; }
+    public String getEmailProviderPassword() { return this.emailProviderPassword; }
+
+    public String getNvdApiKeyProvided() { return this.nvdApiKeyProvided; }
+
+    public String getNvdApiKey() { return this.nvdApiKey; }
 }

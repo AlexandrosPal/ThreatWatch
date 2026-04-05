@@ -12,12 +12,11 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.threatwatch.dtos.SettingsResponseDto;
 import org.threatwatch.models.CveAlertItem;
-import org.threatwatch.models.ParsedCveModel;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
-import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 
@@ -59,7 +58,7 @@ public class EmailService {
                 settings.getEmailProviderHost(),
                 settings.getEmailProviderPort(),
                 settings.getEmailProviderUsername(),
-                settings.privateGetEmailProviderPassword()
+                settings.getEmailProviderPassword()
         );
     }
 
@@ -77,7 +76,7 @@ public class EmailService {
         return validEmailConnection;
     }
 
-    public void sendEmail(Set<String> recipients, String subject, String body) throws Exception {
+    public void sendEmail(Set<String> recipients, String subject, String body) throws UnsupportedEncodingException {
         JavaMailSenderImpl dynamicMailSender = buildMailSender();
 
         SimpleMailMessage message = new SimpleMailMessage();
@@ -92,14 +91,14 @@ public class EmailService {
         dynamicMailSender.send(message);
     }
 
-    public String loadHtmlTemplate() throws Exception {
+    public String loadHtmlTemplate() throws IOException {
         ClassPathResource resource = new ClassPathResource("templates/emailTemplate.html");
         try (InputStream is = resource.getInputStream()) {
             return new String(is.readAllBytes(), StandardCharsets.UTF_8);
         }
     }
 
-    public void sendHtmlEmail(Set<String> recipients, String subject, String body) throws Exception {
+    public void sendHtmlEmail(Set<String> recipients, String subject, String body) throws MessagingException, UnsupportedEncodingException {
         JavaMailSender dynamicMailSender = buildMailSender();
 
         MimeMessage message = dynamicMailSender.createMimeMessage();
@@ -131,8 +130,7 @@ public class EmailService {
                 ? cve.getDescription().substring(0, maxDescriptionLength) + "..."
                 : cve.getDescription();
 
-        String score = "-1".equals(cve.getScore()) ? "" : String.valueOf(cve.getScore());
-        String scoreHtml = score.isEmpty() ? "" : "<span class=\"score\">" + score + "</span>";
+        String score = "-1".equals(String.valueOf(cve.getScore())) ? "" : String.valueOf(cve.getScore());
 
         return "<div class=\"card\" style=\"border:1px solid #e5e7eb;padding:12px;margin-bottom:8px;\">"
                 + "<div style=\"font-weight:bold;\">" + product + " | " + cve.getId() + "</div>"

@@ -1,19 +1,16 @@
 package org.threatwatch.models;
 
-import tools.jackson.databind.JsonNode;
-
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.List;
 
 public class ParsedCveModel {
-    private String cveId;
-    private String description;
-    private String severity;
-    private String score;
-    private String published;
-    private ArrayList<String> references;
+    private final String cveId;
+    private final String description;
+    private final String severity;
+    private final String score;
+    private final String published;
+    private final List<String> references;
 
-    public ParsedCveModel(String cveId, String description, String severity, String score, String published, ArrayList<String> references) {
+    public ParsedCveModel(String cveId, String description, String severity, String score, String published, List<String> references) {
         this.cveId = cveId;
         this.description = description;
         this.severity = severity;
@@ -32,5 +29,5 @@ public class ParsedCveModel {
 
     public String getPublished() { return this.published; }
 
-    public ArrayList<String> getReferences() { return this.references; }
+    public List<String> getReferences() { return this.references; }
 }

@@ -1,5 +1,6 @@
 package org.threatwatch.services;
 
+import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.threatwatch.dtos.SettingsResponseDto;
@@ -7,6 +8,7 @@ import org.threatwatch.models.CveAlertItem;
 import org.threatwatch.models.ParsedCveModel;
 import tools.jackson.databind.JsonNode;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -17,7 +19,6 @@ public class BatchJobService {
 
     private final EmailService emailService;
     private final SettingsService settingsService;
-    private final ProductsService productsService;
     private final NvdRestService nvdRestService;
     private final CveParserService cveParserService;
     private final CveStateService cveStateService;
@@ -28,10 +29,9 @@ public class BatchJobService {
     @Value("${backend.nvd.requests.interval}")
     private int nvdReqeustsInterval;
 
-    public BatchJobService(EmailService emailService, SettingsService settingsService, ProductsService productsService, NvdRestService nvdRestService, CveParserService cveParserService, CveStateService cveStateService) {
+    public BatchJobService(EmailService emailService, SettingsService settingsService, NvdRestService nvdRestService, CveParserService cveParserService, CveStateService cveStateService) {
         this.emailService = emailService;
         this.settingsService = settingsService;
-        this.productsService = productsService;
         this.nvdRestService = nvdRestService;
         this.cveParserService = cveParserService;
         this.cveStateService = cveStateService;
@@ -47,7 +47,7 @@ public class BatchJobService {
                 .anyMatch(url -> url.toLowerCase().contains(product.toLowerCase()));
     }
 
-    public void executeScheduledRun() throws Exception {
+    public void executeScheduledRun() throws IOException, InterruptedException, MessagingException {
 
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter
                 .ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")

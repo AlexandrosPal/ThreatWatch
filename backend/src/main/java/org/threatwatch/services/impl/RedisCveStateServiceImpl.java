@@ -23,7 +23,7 @@ public class RedisCveStateServiceImpl implements CveStateService {
     @Override
     public boolean isNewCve(String cveId) {
         return !redisTemplate.hasKey(cveId);
-    };
+    }
 
     @Override
     public void markCveAsSeen(String cveId) {

@@ -1,6 +1,7 @@
 const BASE_URL_BATCH = "http://localhost:8080/api/batch/run";
 const BASE_URL_SETTINGS = "http://localhost:8080/api/settings";
 const BASE_URL_EMAIL = "http://localhost:8080/api/settings/email/connection";
+const BASE_URL_NVD_CONNECTION = "http://localhost:8080/api/settings/nvd/connection"
 
 export async function scanNow() {
   const res = await fetch(BASE_URL_BATCH, {
@@ -49,4 +50,15 @@ export async function patchSettings(data) {
 
   const json = await res.json();
   return json.response;
+}
+
+export async function testNvdConnection() {
+  const response = await fetch(BASE_URL_NVD_CONNECTION);
+
+  if (!response.ok) {
+    throw new Error("Failed to test NVD connection");
+  }
+
+  const data = await response.json();
+  return data.response === true;
 }

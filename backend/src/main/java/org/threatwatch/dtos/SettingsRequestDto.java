@@ -5,8 +5,6 @@ import org.threatwatch.models.NotificationTypes;
 public class SettingsRequestDto {
 
     private Integer batchInterval;
-    private String lookbackWindow;
-    private String deduplicationWindow;
     private String email;
     private NotificationTypes notificationType;
     private String enabled;
@@ -17,6 +15,7 @@ public class SettingsRequestDto {
     private String emailProviderPort;
     private String emailProviderUsername;
     private String emailProviderPassword;
+    private String nvdApiKey;
 
     public Integer getBatchInterval() { return batchInterval; }
 
@@ -39,4 +38,6 @@ public class SettingsRequestDto {
     public String getEmailProviderUsername() { return this.emailProviderUsername; }
 
     public String getEmailProviderPassword() { return this.emailProviderPassword; }
+
+    public String getNvdApiKey() { return nvdApiKey; }
 }
