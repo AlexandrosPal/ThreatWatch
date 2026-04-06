@@ -1,9 +1,12 @@
 package org.threatwatch.services;
 
 import jakarta.mail.MessagingException;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.threatwatch.dtos.SettingsResponseDto;
+import org.threatwatch.logger.AppLogger;
+import org.threatwatch.logger.LogEvents;
 import org.threatwatch.models.CveAlertItem;
 import org.threatwatch.models.ParsedCveModel;
 import tools.jackson.databind.JsonNode;
@@ -22,6 +25,8 @@ public class BatchJobService {
     private final NvdRestService nvdRestService;
     private final CveParserService cveParserService;
     private final CveStateService cveStateService;
+
+    private static final AppLogger appLogger = new AppLogger(LoggerFactory.getLogger(BatchJobService.class));
 
     @Value("${email.cve.description.product.length.lookup}")
     private int descriptionProductLookupLength;
@@ -74,6 +79,8 @@ public class BatchJobService {
             JsonNode response = nvdRestService.getRecentVulnerabilitiesByProduct(product.toLowerCase(), publishStartDatetime, publishEndDatetime);
             JsonNode vulnerabilities = response.path("vulnerabilities");
 
+            int validCveCounter = 0;
+
             for (JsonNode vulnerability : vulnerabilities) {
                 JsonNode cve = vulnerability.path("cve");
 
@@ -92,6 +99,7 @@ public class BatchJobService {
                     continue;
                 }
 
+                validCveCounter += 1;
                 cveIdsToSend.add(cveId);
                 cvesToSend.add(new CveAlertItem(
                         product,
@@ -102,6 +110,7 @@ public class BatchJobService {
                         parsedCve.getPublished()
                 ));
             }
+            appLogger.info(LogEvents.BATCH_RUN, "Searched vulnerabilities for product '%s'".formatted(product), new LinkedHashMap<>(Map.of("vulnerabilities", validCveCounter, "product", product)));
         }
 
         cvesToSend.sort(
@@ -125,6 +134,6 @@ public class BatchJobService {
             }
         }
 
-        System.out.println("Executed scheduled run @" + Instant.now().toString());
+        appLogger.info(LogEvents.EMAIL_SENT, "Finished scheduled run and sent alert email", new LinkedHashMap<>(Map.of("vulnerabilities", cvesToSend.size())));
     }
 }

@@ -3,8 +3,11 @@ package org.threatwatch.services.impl;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
+import org.threatwatch.logger.AppLogger;
+import org.threatwatch.logger.LogEvents;
 import org.threatwatch.models.ProductModel;
 import org.threatwatch.services.ProductsService;
 
@@ -18,6 +21,8 @@ public class ProductsServiceImpl implements ProductsService {
 
     private Map<String, List<ProductModel>> supportedProducts;
 
+    private static final AppLogger appLogger = new AppLogger(LoggerFactory.getLogger(ProductsServiceImpl.class));
+
     private Map<String, List<ProductModel>> loadProducts() throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         InputStream is = new ClassPathResource("products.json").getInputStream();
@@ -30,6 +35,7 @@ public class ProductsServiceImpl implements ProductsService {
         try {
             this.supportedProducts = loadProducts();
         } catch (Exception e) {
+            appLogger.error(LogEvents.FILE_READ_ERROR, "Error while trying to read products,json file", e);
             throw new IOException("Failed to load products.json", e);
         }
     }
