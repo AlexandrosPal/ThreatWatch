@@ -1,18 +1,26 @@
 package org.threatwatch.services.impl;
 
-import org.springframework.web.client.RestClientResponseException;
-import org.threatwatch.dtos.SettingsResponseDto;
-import org.threatwatch.services.SettingsService;
-import tools.jackson.databind.JsonNode;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientResponseException;
+import org.threatwatch.dtos.SettingsResponseDto;
+import org.threatwatch.logger.AppLogger;
+import org.threatwatch.logger.LogEvents;
 import org.threatwatch.services.NvdRestService;
+import org.threatwatch.services.SettingsService;
+import tools.jackson.databind.JsonNode;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class NvdRestServiceImpl implements NvdRestService {
 
     private final SettingsService settingsService;
     private final RestClient nvdRestClient;
+
+    private static final AppLogger appLogger = new AppLogger(LoggerFactory.getLogger(NvdRestServiceImpl.class));
 
     public NvdRestServiceImpl(SettingsService settingsService, RestClient nvdRestClient) {
         this.settingsService = settingsService;
@@ -35,9 +43,12 @@ public class NvdRestServiceImpl implements NvdRestService {
                 .retrieve()
                 .toBodilessEntity();
 
+            appLogger.info(LogEvents.NVD_REST_CLIENT,"Validated NVD API key", new HashMap<>());
+
             return true;
 
         } catch (RestClientResponseException e) {
+            appLogger.error(LogEvents.NVD_REST_CLIENT,"Error while sending NVD test call", new HashMap<>(Map.of("error", e.getMessage())));
             return false;
         }
     }

@@ -3,6 +3,7 @@ package org.threatwatch.services;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.SimpleMailMessage;
@@ -11,12 +12,16 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.threatwatch.dtos.SettingsResponseDto;
+import org.threatwatch.logger.AppLogger;
+import org.threatwatch.logger.LogEvents;
 import org.threatwatch.models.CveAlertItem;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
@@ -27,6 +32,8 @@ public class EmailService {
 
     @Value("${email.cve.description.length.max}")
     private int maxDescriptionLength;
+
+    private static final AppLogger appLogger = new AppLogger(LoggerFactory.getLogger(EmailService.class));
 
     private JavaMailSenderImpl createMailSender(String host, String port, String username, String password) {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
@@ -68,8 +75,9 @@ public class EmailService {
 
         try {
             dynamicMailSender.testConnection();
-
+            appLogger.info(LogEvents.EMAIL_CONNECTION,"Validated email connection", new HashMap<>());
         } catch (MessagingException e) {
+            appLogger.error(LogEvents.EMAIL_CONNECTION,"Error while sending email test call", new HashMap<>(Map.of("error", e.getMessage())));
             validEmailConnection = false;
         }
 

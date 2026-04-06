@@ -2,11 +2,16 @@ package org.threatwatch.schedulers;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.mail.MessagingException;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.threatwatch.logger.AppLogger;
+import org.threatwatch.logger.LogEvents;
 import org.threatwatch.services.BatchJobService;
 import org.threatwatch.services.SettingsService;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -18,6 +23,8 @@ public class DynamicScheduler {
 
     private final BatchJobService batchJobService;
     private final SettingsService settingsService;
+
+    private static final AppLogger appLogger = new AppLogger(LoggerFactory.getLogger(DynamicScheduler.class));
 
     public DynamicScheduler(BatchJobService batchJobService,
                             SettingsService settingsService) {
@@ -38,17 +45,18 @@ public class DynamicScheduler {
                 boolean enabled = Boolean.parseBoolean(settingsService.retrieveSettings().getEnabled());
 
                 if (enabled) {
+                    appLogger.info(LogEvents.SCHEDULER_RUN,"Started a scheduled run", new HashMap<>());
                     batchJobService.executeScheduledRun();
                 }
             } catch (IOException | MessagingException e) {
-                System.err.println("Error while running scheduled run");
+                appLogger.error(LogEvents.SCHEDULER_RUN,"Error while running scheduled run", new HashMap<>(Map.of("error", e.getMessage())));
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             } finally {
                 try {
                     scheduleNextRun();
                 } catch (Exception e) {
-                    System.err.println("Error in scheduling next run");
+                    appLogger.error(LogEvents.SCHEDULER_RUN,"Error while scheduling next run", new HashMap<>(Map.of("error", e.getMessage())));
                 }
             }
         }, delay, TimeUnit.SECONDS);
