@@ -12,8 +12,8 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.threatwatch.dtos.SettingsResponseDto;
-import org.threatwatch.logger.AppLogger;
-import org.threatwatch.logger.LogEvents;
+import org.threatwatch.loggers.AppLogger;
+import org.threatwatch.loggers.LogEvents;
 import org.threatwatch.models.CveAlertItem;
 
 import java.io.IOException;
@@ -138,7 +138,7 @@ public class EmailService {
                 ? cve.getDescription().substring(0, maxDescriptionLength) + "..."
                 : cve.getDescription();
 
-        String score = "-1".equals(String.valueOf(cve.getScore())) ? "" : String.valueOf(cve.getScore());
+        String score = "-1.0".equals(String.valueOf(cve.getScore())) ? "" : String.valueOf(cve.getScore());
 
         return "<div class=\"card\" style=\"border:1px solid #e5e7eb;padding:12px;margin-bottom:8px;\">"
                 + "<div style=\"font-weight:bold;\">" + product + " | " + cve.getId() + "</div>"

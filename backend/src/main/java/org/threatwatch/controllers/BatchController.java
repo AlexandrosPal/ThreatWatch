@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.threatwatch.dtos.ApiResponseDto;
-import org.threatwatch.logger.AppLogger;
-import org.threatwatch.logger.LogEvents;
+import org.threatwatch.loggers.AppLogger;
+import org.threatwatch.loggers.LogEvents;
 import org.threatwatch.services.BatchJobService;
 
 import java.io.IOException;
@@ -31,9 +31,8 @@ public class BatchController {
     @PostMapping("/run")
     public ResponseEntity<ApiResponseDto> runScheduler() throws IOException, InterruptedException, MessagingException {
 
-        this.batchJobService.executeScheduledRun();
-
         appLogger.info(LogEvents.BATCH_RUN, "Manually initiated scheduler run", new LinkedHashMap<>());
+        this.batchJobService.executeScheduledRun();
 
         return ResponseEntity.accepted().body(new ApiResponseDto(
                 Instant.now(),
