@@ -5,14 +5,15 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.threatwatch.dtos.SettingsRequestDto;
 import org.threatwatch.dtos.SettingsResponseDto;
-import org.threatwatch.logger.AppLogger;
-import org.threatwatch.logger.LogEvents;
+import org.threatwatch.loggers.AppLogger;
+import org.threatwatch.loggers.LogEvents;
 import org.threatwatch.models.NotificationTypes;
 import org.threatwatch.services.ProductsService;
 import org.threatwatch.services.SettingsService;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -98,11 +99,10 @@ public class SettingsServiceImpl implements SettingsService {
     }
 
     private void updateSeverityThreshold(String severityThreshold) {
-        if (severityThreshold != null) {
+        Optional.ofNullable(severityThreshold).ifPresent(threshold -> {
             redisTemplate.opsForValue().set(SETTINGS_SEVERITY_THRESHOLD_KEY, severityThreshold);
-
             appLogger.info(LogEvents.SETTINGS_UPDATE, "Updated severity threshold", new LinkedHashMap<>(Map.of("severityThreshold", severityThreshold)));
-        }
+        });
     }
 
     private void updateEarlyAlertsFlag(String earlyAlerts) {
@@ -149,7 +149,11 @@ public class SettingsServiceImpl implements SettingsService {
         if (nvdApiKey != null) {
             redisTemplate.opsForValue().set(SETTINGS_NVD_API_KEY_KEY, nvdApiKey);
 
-            appLogger.info(LogEvents.SETTINGS_UPDATE, "Updated NVD API key", new LinkedHashMap<>(Map.of("nvdApiKey", "*****")));
+            if (nvdApiKey.isBlank()) {
+                appLogger.info(LogEvents.SETTINGS_UPDATE, "Removed NVD API key", new LinkedHashMap<>());
+            } else {
+                appLogger.info(LogEvents.SETTINGS_UPDATE, "Updated NVD API key", new LinkedHashMap<>(Map.of("nvdApiKey", "*****")));
+            }
         }
     }
 

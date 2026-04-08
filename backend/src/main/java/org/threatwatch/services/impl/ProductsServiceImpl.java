@@ -6,8 +6,8 @@ import jakarta.annotation.PostConstruct;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
-import org.threatwatch.logger.AppLogger;
-import org.threatwatch.logger.LogEvents;
+import org.threatwatch.loggers.AppLogger;
+import org.threatwatch.loggers.LogEvents;
 import org.threatwatch.models.ProductModel;
 import org.threatwatch.services.ProductsService;
 

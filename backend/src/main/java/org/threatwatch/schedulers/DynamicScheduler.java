@@ -4,8 +4,8 @@ import jakarta.annotation.PostConstruct;
 import jakarta.mail.MessagingException;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import org.threatwatch.logger.AppLogger;
-import org.threatwatch.logger.LogEvents;
+import org.threatwatch.loggers.AppLogger;
+import org.threatwatch.loggers.LogEvents;
 import org.threatwatch.services.BatchJobService;
 import org.threatwatch.services.SettingsService;
 

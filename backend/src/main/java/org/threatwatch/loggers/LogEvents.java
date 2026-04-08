@@ -1,4 +1,4 @@
-package org.threatwatch.logger;
+package org.threatwatch.loggers;
 
 public class LogEvents {
 
