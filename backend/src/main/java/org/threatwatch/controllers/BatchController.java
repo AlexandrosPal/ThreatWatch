@@ -2,6 +2,7 @@ package org.threatwatch.controllers;
 
 import jakarta.mail.MessagingException;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,6 +23,8 @@ import java.util.UUID;
 @RequestMapping("/api/batch")
 public class BatchController {
 
+    private String correlationId = UUID.randomUUID().toString();
+
     private final BatchJobService batchJobService;
 
     private static final AppLogger appLogger = new AppLogger(LoggerFactory.getLogger(BatchController.class));
@@ -32,6 +35,7 @@ public class BatchController {
     public ResponseEntity<ApiResponseDto> runScheduler() throws IOException, InterruptedException, MessagingException {
 
         appLogger.info(LogEvents.BATCH_RUN, "Manually initiated scheduler run", new LinkedHashMap<>());
+        MDC.put("correlationId", correlationId);
         this.batchJobService.executeScheduledRun();
 
         return ResponseEntity.accepted().body(new ApiResponseDto(
