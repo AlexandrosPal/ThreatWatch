@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.slf4j.Logger;
+import org.slf4j.MDC;
 
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -37,6 +38,7 @@ public class AppLogger {
             Map<String, Object> json = new LinkedHashMap<>();
             json.put("event", event);
             json.put("level", level);
+            json.put("correlationId", MDC.get("correlationId"));
             json.put("timestamp", dateTimeFormatter.format(Instant.now()));
             json.put("message", message);
 
