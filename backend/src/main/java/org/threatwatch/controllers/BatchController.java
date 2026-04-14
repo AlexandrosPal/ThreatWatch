@@ -23,8 +23,6 @@ import java.util.UUID;
 @RequestMapping("/api/batch")
 public class BatchController {
 
-    private String correlationId = UUID.randomUUID().toString();
-
     private final BatchJobService batchJobService;
 
     private static final AppLogger appLogger = new AppLogger(LoggerFactory.getLogger(BatchController.class));
@@ -34,9 +32,11 @@ public class BatchController {
     @PostMapping("/run")
     public ResponseEntity<ApiResponseDto> runScheduler() throws IOException, InterruptedException, MessagingException {
 
-        appLogger.info(LogEvents.BATCH_RUN, "Manually initiated scheduler run", new LinkedHashMap<>());
+        String correlationId = UUID.randomUUID().toString();
         MDC.put("correlationId", correlationId);
+        appLogger.info(LogEvents.BATCH_RUN, "Manually initiated scheduler run", new LinkedHashMap<>());
         this.batchJobService.executeScheduledRun();
+        MDC.clear();
 
         return ResponseEntity.accepted().body(new ApiResponseDto(
                 Instant.now(),
