@@ -36,6 +36,7 @@ public class DynamicScheduler {
 
     @PostConstruct
     public void start() {
+        settingsService.initializeDefaultsIfMissing();
         scheduleNextRun();
     }
 

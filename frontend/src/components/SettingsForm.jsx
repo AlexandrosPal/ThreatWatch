@@ -124,31 +124,20 @@ export default function SettingsForm() {
       
       const nvdProvided =
         String(data?.nvdApiKeyProvided).toLowerCase() === "true";
-      
-        setNvdApiKeyProvided(String(data?.nvdApiKeyProvided).toLowerCase() === "true");
-      setNvdApiKey("");
-      
-      setNvdApiKeyProvided(nvdProvided);
-      setNvdApiKey("");
+        
+        setNvdApiKeyProvided(nvdProvided);
+        setNvdApiKey("");
 
-      if (nvdProvided) {
-        try {
-          const result = await testNvdConnection();
-          setNvdConnectionResult(result);
-        } catch (err) {
-          console.error(err);
-          setNvdConnectionResult(false);
+        if (!nvdProvided) {
+          setNvdConnectionResult(null);
         }
-      } else {
-        setNvdConnectionResult(null);
+      } catch (err) {
+        console.error(err);
+        alert("Failed to load settings");
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error(err);
-      alert("Failed to load settings");
-    } finally {
-      setLoading(false);
     }
-  }
 
   async function handleClearNvdApiKey() {
     try {
@@ -348,21 +337,6 @@ export default function SettingsForm() {
       alert("Failed to update early alerts setting");
     } finally {
       setSavingEarlyAlerts(false);
-    }
-  }
-
-  async function handleTestNvdConnection() {
-    try {
-      setTestingNvdConnection(true);
-      setNvdConnectionResult(null);
-
-      const result = await testNvdConnection();
-      setNvdConnectionResult(result);
-    } catch (err) {
-      console.error(err);
-      setNvdConnectionResult(false);
-    } finally {
-      setTestingNvdConnection(false);
     }
   }
 
