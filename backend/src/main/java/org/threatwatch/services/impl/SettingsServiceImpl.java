@@ -43,6 +43,23 @@ public class SettingsServiceImpl implements SettingsService {
         this.productsService = productsService;
     }
 
+    @Override
+    public void initializeDefaultsIfMissing() {
+        setDefaultIfMissing(SETTINGS_BATCH_INTERVAL_KEY, "1800");
+        setDefaultIfMissing(SETTINGS_LOOKBACK_WINDOW_KEY, "3600");
+        setDefaultIfMissing(SETTINGS_DEDUPLICATION_WINDOW_KEY, "4320");
+        setDefaultIfMissing(SETTINGS_ENABLED_KEY, "false");
+        setDefaultIfMissing(SETTINGS_SEVERITY_THRESHOLD_KEY, "7.0");
+        setDefaultIfMissing(SETTINGS_EARLY_ALERTS_KEY, "false");
+    }
+
+    private void setDefaultIfMissing(String key, String value) {
+        String existing = redisTemplate.opsForValue().get(key);
+        if (existing == null || existing.isBlank()) {
+            redisTemplate.opsForValue().set(key, value);
+        }
+    }
+
     private void updateBatchInterval(Integer batchInterval) {
         if (batchInterval != null) {
             redisTemplate.opsForValue().set(SETTINGS_BATCH_INTERVAL_KEY, String.valueOf(batchInterval).replace(".0", ""));

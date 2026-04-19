@@ -12,8 +12,12 @@ import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
+import java.util.function.Supplier;
 
 public class AppLogger {
+
+    private static final String CORRELATION_ID = "correlationId";
 
     private final Logger log;
     private final ObjectMapper objectMapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
@@ -23,6 +27,35 @@ public class AppLogger {
 
     public AppLogger(Logger log) {
         this.log = log;
+    }
+
+    public static <T> CorrelatedResult<T> withCorrelationIdRun(Runnable action) {
+        String correlationId = UUID.randomUUID().toString();
+        MDC.put(CORRELATION_ID, correlationId);
+
+        try {
+            action.run();
+            return new CorrelatedResult<>(
+                    correlationId,
+                    null
+            );
+        } finally {
+            MDC.remove(CORRELATION_ID);
+        }
+    }
+
+    public static <T> CorrelatedResult<T> withCorrelationIdCall(Supplier<T> action) {
+        String correlationId = UUID.randomUUID().toString();
+        MDC.put(CORRELATION_ID, correlationId);
+
+        try {
+            return new CorrelatedResult<>(
+                    correlationId,
+                    action.get()
+            );
+        } finally {
+            MDC.remove(CORRELATION_ID);
+        }
     }
 
     public void info(String event, String message, Object data) {
@@ -38,7 +71,7 @@ public class AppLogger {
             Map<String, Object> json = new LinkedHashMap<>();
             json.put("event", event);
             json.put("level", level);
-            json.put("correlationId", MDC.get("correlationId"));
+            json.put(CORRELATION_ID, MDC.get(CORRELATION_ID));
             json.put("timestamp", dateTimeFormatter.format(Instant.now()));
             json.put("message", message);
 
