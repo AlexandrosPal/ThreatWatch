@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
-import { testEmailConnection , getSettings, patchSettings, testNvdConnection } from "../services/api";
-
+import {
+  testEmailConnection,
+  getSettings,
+  patchSettings,
+  testNvdConnection,
+} from "../services/api";
 
 function formatHoursFromMinutes(minutes) {
   const num = Number(minutes);
@@ -33,59 +37,85 @@ function getSeverityMeta(score) {
   const percent = num / 10;
   const hue = (1 - percent) * 120;
 
-  const color = `hsl(${hue}, 70%, 45%)`;
-
-  return { label, color };
+  return { label, color: `hsl(${hue}, 70%, 45%)` };
 }
 
-export default function SettingsForm() {
+function getNotificationTitle(channel) {
+  if (channel === "email") return "Email";
+  if (channel === "discord") return "Discord";
+  if (channel === "slack") return "Slack";
+  if (channel === "teams") return "Microsoft Teams";
+  return channel;
+}
+
+function getWebhookTitle(channel) {
+  if (channel === "discord") return "Discord Webhook";
+  if (channel === "slack") return "Slack Webhook";
+  if (channel === "teams") return "Microsoft Teams Webhook";
+  return "Webhook";
+}
+
+export default function SettingsForm({ activeTab }) {
   const [nvdApiKey, setNvdApiKey] = useState("");
   const [nvdApiKeyProvided, setNvdApiKeyProvided] = useState(false);
   const [savingNvdApiKey, setSavingNvdApiKey] = useState(false);
   const [nvdApiKeySaved, setNvdApiKeySaved] = useState(false);
+
   const [batchIntervalMinutes, setBatchIntervalMinutes] = useState("");
   const minBatchInterval = nvdApiKeyProvided ? 5 : 30;
   const isBatchInvalid =
-    batchIntervalMinutes === "" ||
-    Number(batchIntervalMinutes) < minBatchInterval;
+    batchIntervalMinutes === "" || Number(batchIntervalMinutes) < minBatchInterval;
+
   const [emails, setEmails] = useState([]);
   const [emailInput, setEmailInput] = useState("");
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const isEmailInvalid = emailInput.trim() === "" || !emailRegex.test(emailInput.trim());
+
   const [supportedProducts, setSupportedProducts] = useState([]);
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [selectedProductInput, setSelectedProductInput] = useState("");
+
   const [loading, setLoading] = useState(true);
   const [savingBatch, setSavingBatch] = useState(false);
   const [savingEmail, setSavingEmail] = useState(false);
   const [savingProduct, setSavingProduct] = useState(false);
+
   const [enabled, setEnabled] = useState(false);
   const [savingEnabled, setSavingEnabled] = useState(false);
+
   const [minimumSeverityScore, setMinimumSeverityScore] = useState("7.0");
   const [savingSeverity, setSavingSeverity] = useState(false);
   const [batchSaved, setBatchSaved] = useState(false);
   const [severitySaved, setSeveritySaved] = useState(false);
+
   const [earlyAlerts, setEarlyAlerts] = useState(false);
   const [savingEarlyAlerts, setSavingEarlyAlerts] = useState(false);
+
   const [emailProviderHost, setEmailProviderHost] = useState("");
   const [emailProviderPort, setEmailProviderPort] = useState("");
   const [emailProviderUsername, setEmailProviderUsername] = useState("");
   const [emailProviderPassword, setEmailProviderPassword] = useState("");
   const [savingEmailProvider, setSavingEmailProvider] = useState(false);
   const [emailProviderSaved, setEmailProviderSaved] = useState(false);
-  const isEmailProviderPortInvalid =
-    emailProviderPort !== "" && !/^\d+$/.test(emailProviderPort);
+
   const [testingEmailConnection, setTestingEmailConnection] = useState(false);
   const [emailConnectionResult, setEmailConnectionResult] = useState(null);
+
   const [testingNvdConnection, setTestingNvdConnection] = useState(false);
   const [nvdConnectionResult, setNvdConnectionResult] = useState(null);
 
-  const isEmailProviderInvalid =
-    emailProviderHost.trim() === "" ||
-    emailProviderPort.trim() === "" ||
-    emailProviderUsername.trim() === "" ||
-    emailProviderPassword.trim() === "" ||
-    isEmailProviderPortInvalid;
+  const supportedNotificationChannels = ["email", "discord", "slack", "teams"];
+  const [selectedNotificationChannels, setSelectedNotificationChannels] = useState([]);
+  const [selectedNotificationInput, setSelectedNotificationInput] = useState("");
+
+  const [webhookUrls, setWebhookUrls] = useState({
+    discord: "",
+    slack: "",
+    teams: "",
+  });
+
+  const [savingWebhookChannel, setSavingWebhookChannel] = useState(null);
+  const [webhookSavedChannel, setWebhookSavedChannel] = useState(null);
 
   const percent = (minimumSeverityScore / 10) * 100;
   const color = getSeverityMeta(minimumSeverityScore).color;
@@ -93,7 +123,16 @@ export default function SettingsForm() {
   const availableProducts = supportedProducts.filter(
     (product) => !selectedProducts.includes(product)
   );
-  const isProductInvalid = selectedProductInput.trim() === "" || availableProducts.length === 0;
+
+  const isProductInvalid =
+    selectedProductInput.trim() === "" || availableProducts.length === 0;
+
+  const availableNotificationChannels = supportedNotificationChannels.filter(
+    (channel) => !selectedNotificationChannels.includes(channel)
+  );
+
+  const isNotificationInvalid =
+    selectedNotificationInput.trim() === "" || availableNotificationChannels.length === 0;
 
   useEffect(() => {
     loadSettings();
@@ -104,7 +143,7 @@ export default function SettingsForm() {
       if (showPageLoader) {
         setLoading(true);
       }
-      
+
       const data = await getSettings();
 
       const seconds = Number(data?.batchInterval || 0);
@@ -117,34 +156,59 @@ export default function SettingsForm() {
       setEnabled(String(data?.enabled).toLowerCase() === "true");
       setMinimumSeverityScore(data?.severityThreshold || "7.0");
       setEarlyAlerts(String(data?.earlyAlerts).toLowerCase() === "true");
+
       setEmailProviderHost(data?.emailProviderHost || "");
       setEmailProviderPort(data?.emailProviderPort || "");
       setEmailProviderUsername(data?.emailProviderUsername || "");
       setEmailProviderPassword("");
-      
+
       const nvdProvided =
         String(data?.nvdApiKeyProvided).toLowerCase() === "true";
-        
-        setNvdApiKeyProvided(nvdProvided);
-        setNvdApiKey("");
 
-        if (!nvdProvided) {
-          setNvdConnectionResult(null);
-        }
-      } catch (err) {
-        console.error(err);
-        alert("Failed to load settings");
-      } finally {
-        setLoading(false);
+      setNvdApiKeyProvided(nvdProvided);
+      setNvdApiKey("");
+
+      if (!nvdProvided) {
+        setNvdConnectionResult(null);
       }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to load settings");
+    } finally {
+      setLoading(false);
     }
+  }
+
+  function flashSaved(setter) {
+    setter(true);
+    setTimeout(() => setter(false), 1200);
+  }
+
+  function flashWebhookSaved(channel) {
+    setWebhookSavedChannel(channel);
+    setTimeout(() => setWebhookSavedChannel(null), 1200);
+  }
+
+  function handleAddNotificationChannel() {
+    const channel = selectedNotificationInput.trim();
+    if (!channel) return;
+
+    setSelectedNotificationChannels((prev) => [...prev, channel]);
+    setSelectedNotificationInput("");
+  }
+
+  function handleRemoveNotificationChannel(channelToRemove) {
+    setSelectedNotificationChannels((prev) =>
+      prev.filter((channel) => channel !== channelToRemove)
+    );
+  }
 
   async function handleClearNvdApiKey() {
     try {
       setSavingNvdApiKey(true);
 
       await patchSettings({
-        nvdApiKey: ""
+        nvdApiKey: "",
       });
 
       setNvdApiKey("");
@@ -173,27 +237,22 @@ export default function SettingsForm() {
     }
   }
 
-  function flashSaved(setter) {
-    setter(true);
-    setTimeout(() => setter(false), 1200);
-   }
-
   async function handleToggleEnabled() {
     try {
-        setSavingEnabled(true);
+      setSavingEnabled(true);
 
-        await patchSettings({
+      await patchSettings({
         enabled: (!enabled).toString(),
-        });
+      });
 
-        setEnabled(!enabled);
+      setEnabled(!enabled);
     } catch (err) {
-        console.error(err);
-        alert("Failed to update enabled state");
+      console.error(err);
+      alert("Failed to update enabled state");
     } finally {
-        setSavingEnabled(false);
+      setSavingEnabled(false);
     }
-    }
+  }
 
   async function handleSaveBatchInterval() {
     try {
@@ -208,7 +267,6 @@ export default function SettingsForm() {
 
       await loadSettings();
       flashSaved(setBatchSaved);
-
     } catch (err) {
       console.error(err);
       alert("Failed to save batch interval");
@@ -233,26 +291,6 @@ export default function SettingsForm() {
       alert("Failed to add email");
     } finally {
       setSavingEmail(false);
-    }
-  }
-
-  async function handleSaveEmailProvider() {
-    try {
-      setSavingEmailProvider(true);
-
-      await patchSettings({
-        emailProviderHost: emailProviderHost.trim(),
-        emailProviderPort: emailProviderPort.trim(),
-        emailProviderUsername: emailProviderUsername.trim(),
-        emailProviderPassword: emailProviderPassword,
-      });
-
-      flashSaved(setEmailProviderSaved);
-    } catch (err) {
-      console.error(err);
-      alert("Failed to save email provider settings");
-    } finally {
-      setSavingEmailProvider(false);
     }
   }
 
@@ -307,19 +345,19 @@ export default function SettingsForm() {
 
   async function handleSaveSeverity() {
     try {
-        setSavingSeverity(true);
+      setSavingSeverity(true);
 
-        await patchSettings({
+      await patchSettings({
         severityThreshold: String(minimumSeverityScore),
-        });
+      });
 
-        await loadSettings();
-        flashSaved(setSeveritySaved);
+      await loadSettings();
+      flashSaved(setSeveritySaved);
     } catch (err) {
-        console.error(err);
-        alert("Failed to save severity filter");
+      console.error(err);
+      alert("Failed to save severity filter");
     } finally {
-        setSavingSeverity(false);
+      setSavingSeverity(false);
     }
   }
 
@@ -337,6 +375,26 @@ export default function SettingsForm() {
       alert("Failed to update early alerts setting");
     } finally {
       setSavingEarlyAlerts(false);
+    }
+  }
+
+  async function handleSaveEmailProvider() {
+    try {
+      setSavingEmailProvider(true);
+
+      await patchSettings({
+        emailProviderHost: emailProviderHost.trim(),
+        emailProviderPort: emailProviderPort.trim(),
+        emailProviderUsername: emailProviderUsername.trim(),
+        emailProviderPassword: emailProviderPassword,
+      });
+
+      flashSaved(setEmailProviderSaved);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to save email provider settings");
+    } finally {
+      setSavingEmailProvider(false);
     }
   }
 
@@ -372,320 +430,252 @@ export default function SettingsForm() {
     }
   }
 
+  function handleSaveWebhook(channel) {
+    setSavingWebhookChannel(channel);
+
+    // TODO later:
+    // patchSettings({
+    //   notificationChannel: channel,
+    //   webhookUrl: webhookUrls[channel].trim(),
+    // });
+
+    setTimeout(() => {
+      setSavingWebhookChannel(null);
+      flashWebhookSaved(channel);
+    }, 400);
+  }
+
+  function renderWebhookSection(channel) {
+    return (
+      <section className="card" key={channel}>
+        <div className="card-header">
+          <div>
+            <h2>{getWebhookTitle(channel)}</h2>
+            <p>Configure the webhook URL used to send vulnerability alerts.</p>
+          </div>
+        </div>
+
+        <div className="provider-row">
+          <input
+            className="text-input"
+            type="text"
+            value={webhookUrls[channel]}
+            onChange={(e) => {
+              setWebhookUrls((prev) => ({
+                ...prev,
+                [channel]: e.target.value,
+              }));
+              setWebhookSavedChannel(null);
+            }}
+            placeholder={`${getWebhookTitle(channel)} URL`}
+          />
+        </div>
+
+        <div className="save-action-wrap">
+          <button
+            type="button"
+            className="primary-button"
+            onClick={() => handleSaveWebhook(channel)}
+            disabled={
+              savingWebhookChannel === channel ||
+              webhookUrls[channel].trim() === ""
+            }
+          >
+            {savingWebhookChannel === channel ? "Saving..." : "Save"}
+          </button>
+
+          <span
+            className={`save-check ${
+              webhookSavedChannel === channel ? "visible" : ""
+            }`}
+          >
+            ✓
+          </span>
+        </div>
+      </section>
+    );
+  }
+
   if (loading) {
     return <p className="loading-text">Loading settings...</p>;
   }
 
   return (
     <div className="settings-grid">
-      <section className="card">
-        <div className="card-header">
-          <div>
-            <h2>Batch Interval</h2>
-            <p>How often the background job should run.</p>
-          </div>
-        </div>
+      {activeTab === "basic" && (
+        <>
+          <section className="card">
+            <div className="card-header">
+              <div>
+                <h2>Batch Interval</h2>
+                <p>How often the background job should run.</p>
+              </div>
+            </div>
 
-        <div className="input-row input-row-top">
-          <div className="field-block">
-            <div className="input-with-suffix">
+            <div className="input-row input-row-top">
+              <div className="field-block">
+                <div className="input-with-suffix">
+                  <input
+                    className={`text-input ${isBatchInvalid ? "input-error" : ""}`}
+                    type="text"
+                    inputMode="numeric"
+                    value={batchIntervalMinutes}
+                    onChange={(e) => {
+                      const value = e.target.value;
+
+                      if (/^\d*$/.test(value)) {
+                        setBatchIntervalMinutes(value);
+                      }
+                    }}
+                    placeholder="Batch interval in minutes"
+                  />
+                  <span className="input-suffix">
+                    {formatHoursFromMinutes(batchIntervalMinutes)}
+                  </span>
+                </div>
+
+                {isBatchInvalid && (
+                  <p className="error-text">
+                    Minimum value is {minBatchInterval} minute
+                    {minBatchInterval > 1 ? "s" : ""}
+                  </p>
+                )}
+              </div>
+
+              <div className="save-action-wrap">
+                <button
+                  type="button"
+                  className="primary-button"
+                  onClick={handleSaveBatchInterval}
+                  disabled={savingBatch || isBatchInvalid}
+                >
+                  {savingBatch ? "Saving..." : "Save"}
+                </button>
+
+                <span className={`save-check ${batchSaved ? "visible" : ""}`}>
+                  ✓
+                </span>
+              </div>
+            </div>
+          </section>
+
+          <section className="card">
+            <div className="card-header">
+              <div>
+                <h2>Watchlist</h2>
+                <p>Select the technologies you want to receive alerts for.</p>
+              </div>
+            </div>
+
+            <div className="input-row">
+              <select
+                className="text-input"
+                value={selectedProductInput}
+                onChange={(e) => setSelectedProductInput(e.target.value)}
+                disabled={availableProducts.length === 0}
+              >
+                <option value="">
+                  {availableProducts.length === 0
+                    ? "No more items available"
+                    : "Select item"}
+                </option>
+                {availableProducts.map((product) => (
+                  <option key={product} value={product}>
+                    {product}
+                  </option>
+                ))}
+              </select>
+
+              <button
+                className="icon-button"
+                onClick={handleAddProduct}
+                disabled={savingProduct || isProductInvalid}
+                aria-label="Add product"
+                title="Add product"
+              >
+                +
+              </button>
+            </div>
+
+            <div className="chips-wrap">
+              {selectedProducts.length === 0 ? (
+                <p className="muted-text">No products selected yet.</p>
+              ) : (
+                selectedProducts.map((product) => (
+                  <div key={product} className="chip">
+                    <span>{product}</span>
+                    <button
+                      className="chip-remove"
+                      onClick={() => handleRemoveProduct(product)}
+                      disabled={savingProduct}
+                      aria-label={`Remove ${product}`}
+                      title={`Remove ${product}`}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </section>
+
+          <section className="card">
+            <div className="card-header">
+              <div>
+                <h2>Scheduler</h2>
+                <p>Enable or disable automatic execution.</p>
+              </div>
+            </div>
+
+            <div className="toggle-row">
+              <span className="toggle-label">Scheduler</span>
+
+              <button
+                type="button"
+                className={`toggle-switch ${enabled ? "active" : ""}`}
+                onClick={handleToggleEnabled}
+                disabled={savingEnabled}
+              >
+                <span className="toggle-thumb"></span>
+              </button>
+            </div>
+
+            <div className="toggle-divider"></div>
+
+            <div className="toggle-row">
+              <div className="label-with-tooltip">
+                <span className="toggle-label">Early alerts</span>
+
+                <div className="tooltip-container">
+                  <span className="tooltip-icon">?</span>
+
+                  <div className="tooltip-text">
+                    Include CVEs without severity score (early-stage vulnerabilities).
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className={`toggle-switch ${earlyAlerts ? "active" : ""}`}
+                onClick={handleToggleEarlyAlerts}
+                disabled={savingEarlyAlerts}
+              >
+                <span className="toggle-thumb"></span>
+              </button>
+            </div>
+          </section>
+
+          <section className="card">
+            <div className="card-header">
+              <div>
+                <h2>Severity Threshold</h2>
+                <p>Only send alerts above the selected CVSS threshold.</p>
+              </div>
+            </div>
+
+            <div className="severity-card-content">
               <input
-                className={`text-input ${isBatchInvalid ? "input-error" : ""}`}
-                type="text"
-                inputMode="numeric"
-                value={batchIntervalMinutes}
-                onChange={(e) => {
-                  const value = e.target.value;
-
-                  if (/^\d*$/.test(value)) {
-                    setBatchIntervalMinutes(value);
-                  }
-                }}
-                placeholder="Batch interval in minutes"
-              />
-              <span className="input-suffix">
-                {formatHoursFromMinutes(batchIntervalMinutes)}
-              </span>
-            </div>
-
-            {isBatchInvalid && (
-              <p className="error-text">
-                Minimum value is {minBatchInterval} minute{minBatchInterval > 1 ? "s" : ""}
-              </p>
-            )}
-          </div>
-
-          <div className="save-action-wrap">
-            <button
-              type="button"
-              className="primary-button"
-              onClick={handleSaveBatchInterval}
-              disabled={savingBatch || isBatchInvalid}
-            >
-              {savingBatch ? "Saving..." : "Save"}
-            </button>
-
-            <span className={`save-check ${batchSaved ? "visible" : ""}`}>✓</span>
-          </div>
-        </div>
-      </section>
-
-      <section className="card">
-        <div className="card-header">
-          <div>
-            <h2>Email Provider</h2>
-            <p>Configure the SMTP server used to send vulnerability alerts.</p>
-          </div>
-        </div>
-
-        <div className="provider-row">
-          <input
-            className="text-input"
-            type="text"
-            value={emailProviderHost}
-            onChange={(e) => {
-              setEmailProviderHost(e.target.value);
-              setEmailConnectionResult(null);
-            }}
-            placeholder="SMTP host"
-          />
-
-          <input
-            className="text-input provider-port-input"
-            type="text"
-            value={emailProviderPort}
-            onChange={(e) => {
-              setEmailProviderPort(e.target.value);
-              setEmailConnectionResult(null);
-            }}
-            placeholder="Port"
-          />
-        </div>
-
-        <div className="provider-row">
-          <input
-            className="text-input"
-            type="text"
-            value={emailProviderUsername}
-            onChange={(e) => {
-              setEmailProviderUsername(e.target.value);
-              setEmailConnectionResult(null);
-            }}
-            placeholder="Username"
-          />
-
-          <input
-            className="text-input"
-            type="password"
-            value={emailProviderPassword}
-            onChange={(e) => {
-              setEmailProviderPassword(e.target.value);
-              setEmailConnectionResult(null);
-            }}
-            placeholder="Leave empty to keep current password if set"
-          />
-        </div>
-
-        <div className="provider-actions-row">
-          <div className="save-action-wrap">
-            <button
-              type="button"
-              className="primary-button"
-              onClick={handleSaveEmailProvider}
-            >
-              {savingEmailProvider ? "Saving..." : "Save"}
-            </button>
-
-            <span className={`save-check ${emailProviderSaved ? "visible" : ""}`}>✓</span>
-          </div>
-
-          <div className="connection-test-wrap">
-            <button
-              type="button"
-              className="secondary-button"
-              onClick={handleTestEmailConnection}
-              disabled={testingEmailConnection}
-            >
-              {testingEmailConnection ? "Testing..." : "Test connection"}
-            </button>
-
-            {emailConnectionResult === true && (
-              <span className="connection-result success">Connected</span>
-            )}
-
-            {emailConnectionResult === false && (
-              <span className="connection-result error">Failed</span>
-            )}
-          </div>
-        </div>
-      </section>
-
-      <section className="card">
-        <div className="card-header">
-          <div>
-            <h2>Emails</h2>
-            <p>Add or remove notification recipients.</p>
-          </div>
-        </div>
-
-        <div className="input-row">
-          <input
-            className={`text-input ${isEmailInvalid && emailInput ? "input-error" : ""}`}
-            value={emailInput}
-            onChange={(e) => setEmailInput(e.target.value)}
-            placeholder="name@example.com"
-          />
-          <button
-            className="icon-button"
-            onClick={handleAddEmail}
-            disabled={savingEmail || isEmailInvalid}
-            aria-label="Add email"
-            title="Add email"
-          >
-            +
-          </button>
-          {isEmailInvalid && emailInput && (
-            <p className="error-text">Enter a valid email address</p>
-          )}
-        </div>
-
-        <div className="chips-wrap">
-          {emails.length === 0 ? (
-            <p className="muted-text">No emails added yet.</p>
-          ) : (
-            emails.map((email) => (
-              <div key={email} className="chip">
-                <span>{email}</span>
-                <button
-                  className="chip-remove"
-                  onClick={() => handleRemoveEmail(email)}
-                  disabled={savingEmail}
-                  aria-label={`Remove ${email}`}
-                  title={`Remove ${email}`}
-                >
-                  ×
-                </button>
-              </div>
-            ))
-          )}
-        </div>
-      </section>
-      
-      <section className="card">
-        <div className="card-header">
-          <div>
-            <h2>Watchlist</h2>
-            <p>Select the technologies you want to receive alerts for.</p>
-          </div>
-        </div>
-
-        <div className="input-row">
-          <select
-            className="text-input"
-            value={selectedProductInput}
-            onChange={(e) => setSelectedProductInput(e.target.value)}
-            disabled={availableProducts.length === 0}
-          >
-            <option value="">
-              {availableProducts.length === 0 ? "No more items available" : "Select item"}
-            </option>
-            {availableProducts.map((product) => (
-              <option key={product} value={product}>
-                {product}
-              </option>
-            ))}
-          </select>
-
-          <button
-            className="icon-button"
-            onClick={handleAddProduct}
-            disabled={savingProduct || isProductInvalid}
-            aria-label="Add product"
-            title="Add product"
-          >
-            +
-          </button>
-        </div>
-
-        <div className="chips-wrap">
-          {selectedProducts.length === 0 ? (
-            <p className="muted-text">No products selected yet.</p>
-          ) : (
-            selectedProducts.map((product) => (
-              <div key={product} className="chip">
-                <span>{product}</span>
-                <button
-                  className="chip-remove"
-                  onClick={() => handleRemoveProduct(product)}
-                  disabled={savingProduct}
-                  aria-label={`Remove ${product}`}
-                  title={`Remove ${product}`}
-                >
-                  ×
-                </button>
-              </div>
-            ))
-          )}
-        </div>
-      </section>
-      <section className="card">
-        <div className="card-header">
-            <div>
-            <h2>Scheduler</h2>
-            <p>Enable or disable automatic execution.</p>
-            </div>
-        </div>
-
-        <div className="toggle-row">
-            <span className="toggle-label">
-            Scheduler
-            </span>
-
-            <button
-            type="button"
-            className={`toggle-switch ${enabled ? "active" : ""}`}
-            onClick={handleToggleEnabled}
-            disabled={savingEnabled}
-            >
-            <span className="toggle-thumb"></span>
-            </button>
-        </div>
-        <div className="toggle-divider"></div>
-        <div className="toggle-row">
-        <div className="label-with-tooltip">
-          <span className="toggle-label">
-            Early alerts
-          </span>
-
-          <div className="tooltip-container">
-            <span className="tooltip-icon">?</span>
-
-            <div className="tooltip-text">
-              Include CVEs without severity score (early-stage vulnerabilities).
-            </div>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          className={`toggle-switch ${earlyAlerts ? "active" : ""}`}
-          onClick={handleToggleEarlyAlerts}
-          disabled={savingEarlyAlerts}
-        >
-          <span className="toggle-thumb"></span>
-        </button>
-      </div>
-      </section>
-      <section className="card">
-        <div className="card-header">
-            <div>
-            <h2>Severity Threshold</h2>
-            <p>Only send alerts above the selected CVSS threshold.</p>
-            </div>
-        </div>
-
-        <div className="severity-card-content">
-            <input
                 type="range"
                 min="0.1"
                 max="10"
@@ -694,113 +684,348 @@ export default function SettingsForm() {
                 onChange={(e) => setMinimumSeverityScore(e.target.value)}
                 className="severity-slider"
                 style={{
-                    background: `linear-gradient(to right, ${color} 0%, ${color} ${percent}%, #e5e7eb ${percent}%, #e5e7eb 100%)`
+                  background: `linear-gradient(to right, ${color} 0%, ${color} ${percent}%, #e5e7eb ${percent}%, #e5e7eb 100%)`,
                 }}
-            />
+              />
 
-            <div className="severity-meta-row">
-            <div
-                className="severity-badge"
-                style={{ backgroundColor: getSeverityMeta(minimumSeverityScore).color }}
-            >
-                {getSeverityMeta(minimumSeverityScore).label}
-            </div>
+              <div className="severity-meta-row">
+                <div
+                  className="severity-badge"
+                  style={{
+                    backgroundColor: getSeverityMeta(minimumSeverityScore).color,
+                  }}
+                >
+                  {getSeverityMeta(minimumSeverityScore).label}
+                </div>
 
-            <span className="severity-score">
-                {Number(minimumSeverityScore).toFixed(1)}
-            </span>
-            </div>
+                <span className="severity-score">
+                  {Number(minimumSeverityScore).toFixed(1)}
+                </span>
+              </div>
 
-            <div className="severity-footer">
-            <span className="muted-text">0.1</span>
-            <span className="muted-text">10.0</span>
-            </div>
+              <div className="severity-footer">
+                <span className="muted-text">0.1</span>
+                <span className="muted-text">10.0</span>
+              </div>
 
-            <div style={{ marginTop: "16px" }}>
-            <div className="save-action-wrap">
-                <button
+              <div style={{ marginTop: "16px" }}>
+                <div className="save-action-wrap">
+                  <button
                     type="button"
                     className="primary-button"
                     onClick={handleSaveSeverity}
                     disabled={savingSeverity}
-                >
+                  >
                     {savingSeverity ? "Saving..." : "Save"}
-                </button>
+                  </button>
 
-                <span className={`save-check ${severitySaved ? "visible" : ""}`}>✓</span>
+                  <span className={`save-check ${severitySaved ? "visible" : ""}`}>
+                    ✓
+                  </span>
+                </div>
               </div>
             </div>
-        </div>
-      </section>
-      <section className="card">
-        <div className="card-header">
-          <div>
-            <h2>NVD API Key</h2>
-            <p>
-              Add an NVD API key to allow shorter batch intervals and higher request throughput.
-            </p>
-          </div>
-        </div>
+          </section>
 
-        <div className="provider-row">
-          <input
-            className="text-input"
-            type="password"
-            value={nvdApiKey}
-            onChange={(e) => {
-              setNvdApiKey(e.target.value);
-              setNvdConnectionResult(null);
-            }}
-            placeholder="Leave empty to keep current key"
-          />
-        </div>
+          <section className="card">
+            <div className="card-header">
+              <div>
+                <h2>NVD API Key</h2>
+                <p>
+                  Add an NVD API key to allow shorter batch intervals and higher
+                  request throughput.
+                </p>
+              </div>
+            </div>
 
-        <div className="provider-actions-row">
-          <div className="save-action-wrap">
-            <button
-              type="button"
-              className="primary-button"
-              onClick={handleSaveNvdApiKey}
-              disabled={savingNvdApiKey || nvdApiKey.trim() === ""}
-            >
-              {savingNvdApiKey ? "Saving..." : "Save"}
-            </button>
+            <div className="provider-row">
+              <input
+                className="text-input"
+                type="password"
+                value={nvdApiKey}
+                onChange={(e) => {
+                  setNvdApiKey(e.target.value);
+                  setNvdConnectionResult(null);
+                }}
+                placeholder="Leave empty to keep current key"
+              />
+            </div>
 
-            <span className={`save-check ${nvdApiKeySaved ? "visible" : ""}`}>✓</span>
-          </div>
+            <div className="provider-actions-row">
+              <div className="save-action-wrap">
+                <button
+                  type="button"
+                  className="primary-button"
+                  onClick={handleSaveNvdApiKey}
+                  disabled={savingNvdApiKey || nvdApiKey.trim() === ""}
+                >
+                  {savingNvdApiKey ? "Saving..." : "Save"}
+                </button>
 
-          <div className="connection-test-wrap">
-            {nvdApiKeyProvided && (
-              <button
-                type="button"
-                className="secondary-button danger-button"
-                onClick={handleClearNvdApiKey}
-                disabled={savingNvdApiKey}
+                <span className={`save-check ${nvdApiKeySaved ? "visible" : ""}`}>
+                  ✓
+                </span>
+              </div>
+
+              <div className="connection-test-wrap">
+                {nvdApiKeyProvided && (
+                  <button
+                    type="button"
+                    className="secondary-button danger-button"
+                    onClick={handleClearNvdApiKey}
+                    disabled={savingNvdApiKey}
+                  >
+                    Clear key
+                  </button>
+                )}
+
+                {testingNvdConnection && (
+                  <span className="connection-result">Testing...</span>
+                )}
+
+                {!testingNvdConnection && nvdConnectionResult === true && (
+                  <span className="connection-result success">Configured</span>
+                )}
+
+                {!testingNvdConnection && nvdConnectionResult === false && (
+                  <span className="connection-result error">Invalid API key</span>
+                )}
+
+                {!testingNvdConnection && nvdConnectionResult === null && (
+                  <span
+                    className={`connection-result ${
+                      nvdApiKeyProvided ? "success" : "error"
+                    }`}
+                  >
+                    {nvdApiKeyProvided
+                      ? "API key configured"
+                      : "No API key configured"}
+                  </span>
+                )}
+              </div>
+            </div>
+          </section>
+        </>
+      )}
+
+      {activeTab === "notifications" && (
+        <>
+          <section className="card">
+            <div className="card-header">
+              <div>
+                <h2>Notification Channels</h2>
+                <p>Select how ThreatWatch should send vulnerability alerts.</p>
+              </div>
+            </div>
+
+            <div className="input-row">
+              <select
+                className="text-input"
+                value={selectedNotificationInput}
+                onChange={(e) => setSelectedNotificationInput(e.target.value)}
+                disabled={availableNotificationChannels.length === 0}
               >
-                Clear key
+                <option value="">
+                  {availableNotificationChannels.length === 0
+                    ? "No more channels available"
+                    : "Select channel"}
+                </option>
+
+                {availableNotificationChannels.map((channel) => (
+                  <option key={channel} value={channel}>
+                    {getNotificationTitle(channel)}
+                  </option>
+                ))}
+              </select>
+
+              <button
+                className="icon-button"
+                onClick={handleAddNotificationChannel}
+                disabled={isNotificationInvalid}
+                aria-label="Add notification channel"
+                title="Add notification channel"
+              >
+                +
               </button>
-            )}
+            </div>
 
-            {testingNvdConnection && (
-              <span className="connection-result">Testing...</span>
-            )}
+            <div className="chips-wrap">
+              {selectedNotificationChannels.length === 0 ? (
+                <p className="muted-text">No notification channels selected yet.</p>
+              ) : (
+                selectedNotificationChannels.map((channel) => (
+                  <div key={channel} className="chip">
+                    <span>{getNotificationTitle(channel)}</span>
+                    <button
+                      className="chip-remove"
+                      onClick={() => handleRemoveNotificationChannel(channel)}
+                      aria-label={`Remove ${channel}`}
+                      title={`Remove ${channel}`}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </section>
 
-            {!testingNvdConnection && nvdConnectionResult === true && (
-              <span className="connection-result success">Configured</span>
-            )}
+          {selectedNotificationChannels.includes("email") && (
+            <>
+              <section className="card">
+                <div className="card-header">
+                  <div>
+                    <h2>Email Provider</h2>
+                    <p>Configure the SMTP server used to send vulnerability alerts.</p>
+                  </div>
+                </div>
 
-            {!testingNvdConnection && nvdConnectionResult === false && (
-              <span className="connection-result error">Invalid API key</span>
-            )}
+                <div className="provider-row">
+                  <input
+                    className="text-input"
+                    type="text"
+                    value={emailProviderHost}
+                    onChange={(e) => {
+                      setEmailProviderHost(e.target.value);
+                      setEmailConnectionResult(null);
+                    }}
+                    placeholder="SMTP host"
+                  />
 
-            {!testingNvdConnection && nvdConnectionResult === null && (
-              <span className={`connection-result ${nvdApiKeyProvided ? "success" : "error"}`}>
-                {nvdApiKeyProvided ? "API key configured" : "No API key configured"}
-              </span>
-            )}
-          </div>
-        </div>
-      </section>
+                  <input
+                    className="text-input provider-port-input"
+                    type="text"
+                    value={emailProviderPort}
+                    onChange={(e) => {
+                      setEmailProviderPort(e.target.value);
+                      setEmailConnectionResult(null);
+                    }}
+                    placeholder="Port"
+                  />
+                </div>
+
+                <div className="provider-row">
+                  <input
+                    className="text-input"
+                    type="text"
+                    value={emailProviderUsername}
+                    onChange={(e) => {
+                      setEmailProviderUsername(e.target.value);
+                      setEmailConnectionResult(null);
+                    }}
+                    placeholder="Username"
+                  />
+
+                  <input
+                    className="text-input"
+                    type="password"
+                    value={emailProviderPassword}
+                    onChange={(e) => {
+                      setEmailProviderPassword(e.target.value);
+                      setEmailConnectionResult(null);
+                    }}
+                    placeholder="Leave empty to keep current password if set"
+                  />
+                </div>
+
+                <div className="provider-actions-row">
+                  <div className="save-action-wrap">
+                    <button
+                      type="button"
+                      className="primary-button"
+                      onClick={handleSaveEmailProvider}
+                    >
+                      {savingEmailProvider ? "Saving..." : "Save"}
+                    </button>
+
+                    <span
+                      className={`save-check ${emailProviderSaved ? "visible" : ""}`}
+                    >
+                      ✓
+                    </span>
+                  </div>
+
+                  <div className="connection-test-wrap">
+                    <button
+                      type="button"
+                      className="secondary-button"
+                      onClick={handleTestEmailConnection}
+                      disabled={testingEmailConnection}
+                    >
+                      {testingEmailConnection ? "Testing..." : "Test connection"}
+                    </button>
+
+                    {emailConnectionResult === true && (
+                      <span className="connection-result success">Connected</span>
+                    )}
+
+                    {emailConnectionResult === false && (
+                      <span className="connection-result error">Failed</span>
+                    )}
+                  </div>
+                </div>
+              </section>
+
+              <section className="card">
+                <div className="card-header">
+                  <div>
+                    <h2>Emails</h2>
+                    <p>Add or remove notification recipients.</p>
+                  </div>
+                </div>
+
+                <div className="input-row">
+                  <input
+                    className={`text-input ${
+                      isEmailInvalid && emailInput ? "input-error" : ""
+                    }`}
+                    value={emailInput}
+                    onChange={(e) => setEmailInput(e.target.value)}
+                    placeholder="name@example.com"
+                  />
+                  <button
+                    className="icon-button"
+                    onClick={handleAddEmail}
+                    disabled={savingEmail || isEmailInvalid}
+                    aria-label="Add email"
+                    title="Add email"
+                  >
+                    +
+                  </button>
+                  {isEmailInvalid && emailInput && (
+                    <p className="error-text">Enter a valid email address</p>
+                  )}
+                </div>
+
+                <div className="chips-wrap">
+                  {emails.length === 0 ? (
+                    <p className="muted-text">No emails added yet.</p>
+                  ) : (
+                    emails.map((email) => (
+                      <div key={email} className="chip">
+                        <span>{email}</span>
+                        <button
+                          className="chip-remove"
+                          onClick={() => handleRemoveEmail(email)}
+                          disabled={savingEmail}
+                          aria-label={`Remove ${email}`}
+                          title={`Remove ${email}`}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </section>
+            </>
+          )}
+
+          {selectedNotificationChannels
+            .filter((channel) => channel !== "email")
+            .map((channel) => renderWebhookSection(channel))}
+        </>
+      )}
     </div>
   );
 }

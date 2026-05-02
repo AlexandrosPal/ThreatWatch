@@ -7,13 +7,12 @@ import logo from "./assets/logo.svg";
 function App() {
   const [isScanning, setIsScanning] = useState(false);
   const [scanSuccess, setScanSuccess] = useState(false);
+  const [activeTab, setActiveTab] = useState("basic");
 
   const handleManualScan = async () => {
     try {
       setIsScanning(true);
-
       await scanNow();
-
       setScanSuccess(true);
       setTimeout(() => setScanSuccess(false), 1200);
     } catch (err) {
@@ -28,7 +27,6 @@ function App() {
     <div className="app-shell">
       <div className="page">
         <header className="page-header">
-  
           <div className="title-row">
             <img src={logo} alt="ThreatWatch logo" className="logo" />
             <h1>ThreatWatch</h1>
@@ -46,15 +44,30 @@ function App() {
                 {isScanning ? "Scanning..." : "Scan now"}
               </button>
 
-              <span className={`save-check ${scanSuccess ? "visible" : ""}`}>
-                ✓
-              </span>
+              <span className={`save-check ${scanSuccess ? "visible" : ""}`}>✓</span>
             </div>
           </div>
-
         </header>
 
-        <SettingsForm />
+        <nav className="settings-tabs">
+          <button
+            type="button"
+            className={`tab-button ${activeTab === "basic" ? "active" : ""}`}
+            onClick={() => setActiveTab("basic")}
+          >
+            Basic configuration
+          </button>
+
+          <button
+            type="button"
+            className={`tab-button ${activeTab === "notifications" ? "active" : ""}`}
+            onClick={() => setActiveTab("notifications")}
+          >
+            Notifications
+          </button>
+        </nav>
+
+        <SettingsForm activeTab={activeTab} />
       </div>
     </div>
   );
