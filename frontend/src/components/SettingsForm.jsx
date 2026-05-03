@@ -104,7 +104,7 @@ export default function SettingsForm({ activeTab }) {
   const [testingNvdConnection, setTestingNvdConnection] = useState(false);
   const [nvdConnectionResult, setNvdConnectionResult] = useState(null);
 
-  const supportedNotificationChannels = ["email", "discord", "slack", "teams"];
+  const [supportedNotificationChannels, setSupportedNotificationChannels] = useState([]);
   const [selectedNotificationChannels, setSelectedNotificationChannels] = useState([]);
   const [selectedNotificationInput, setSelectedNotificationInput] = useState("");
 
@@ -153,6 +153,19 @@ export default function SettingsForm({ activeTab }) {
       setEmails(data?.emails || []);
       setSupportedProducts(data?.supportedProducts || []);
       setSelectedProducts(data?.productsSelected || []);
+      setSupportedNotificationChannels(
+        (data?.supportedNotifications || []).map((c) => c.toLowerCase())
+      );
+
+      setSelectedNotificationChannels(
+        (data?.notificationsSelected || []).map((c) => c.toLowerCase())
+      );
+      setWebhookUrls({
+        discord: data?.discordWebhookUrl || "",
+        slack: data?.slackWebhookUrl || "",
+        teams: data?.teamsWebhookUrl || "",
+      });
+      
       setEnabled(String(data?.enabled).toLowerCase() === "true");
       setMinimumSeverityScore(data?.severityThreshold || "7.0");
       setEarlyAlerts(String(data?.earlyAlerts).toLowerCase() === "true");
@@ -189,18 +202,44 @@ export default function SettingsForm({ activeTab }) {
     setTimeout(() => setWebhookSavedChannel(null), 1200);
   }
 
-  function handleAddNotificationChannel() {
+  function toTitleCase(value) {
+    if (!value) return value;
+
+    return value
+      .toLowerCase()
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  }
+
+  async function handleAddNotificationChannel() {
     const channel = selectedNotificationInput.trim();
     if (!channel) return;
 
-    setSelectedNotificationChannels((prev) => [...prev, channel]);
-    setSelectedNotificationInput("");
+    try {
+      await patchSettings({
+        notificationsSelected: toTitleCase(channel),
+      });
+
+      setSelectedNotificationInput("");
+      await loadSettings();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to add notification channel");
+    }
   }
 
-  function handleRemoveNotificationChannel(channelToRemove) {
-    setSelectedNotificationChannels((prev) =>
-      prev.filter((channel) => channel !== channelToRemove)
-    );
+  async function handleRemoveNotificationChannel(channelToRemove) {
+    try {
+      await patchSettings({
+        notificationsSelected: toTitleCase(channelToRemove),
+      });
+
+      await loadSettings();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to remove notification channel");
+    }
   }
 
   async function handleClearNvdApiKey() {
@@ -431,18 +470,32 @@ export default function SettingsForm({ activeTab }) {
   }
 
   function handleSaveWebhook(channel) {
+    const url = webhookUrls[channel]?.trim();
+    if (!url) return;
+
     setSavingWebhookChannel(channel);
 
-    // TODO later:
-    // patchSettings({
-    //   notificationChannel: channel,
-    //   webhookUrl: webhookUrls[channel].trim(),
-    // });
+    const fieldMap = {
+      discord: "discordWebhookUrl",
+      slack: "slackWebhookUrl",
+      teams: "teamsWebhookUrl",
+    };
 
-    setTimeout(() => {
-      setSavingWebhookChannel(null);
-      flashWebhookSaved(channel);
-    }, 400);
+    const fieldName = fieldMap[channel];
+
+    patchSettings({
+      [fieldName]: url,
+    })
+      .then(() => {
+        flashWebhookSaved(channel);
+      })
+      .catch((err) => {
+        console.error(err);
+        alert("Failed to save webhook");
+      })
+      .finally(() => {
+        setSavingWebhookChannel(null);
+      });
   }
 
   function renderWebhookSection(channel) {

@@ -4,7 +4,11 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum NotificationTypes {
-    EMAIL;
+    EMAIL,
+    DISCORD,
+    SLACK,
+    TEAMS;
+
 
     @JsonValue
     public String toJson() {
