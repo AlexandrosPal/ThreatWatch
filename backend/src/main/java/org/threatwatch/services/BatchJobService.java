@@ -128,12 +128,14 @@ public class BatchJobService {
         if (!cveIdsToSend.isEmpty()) {
             html = html.replace("{{cveList}}", cveListHtml.toString());
             emailService.sendHtmlEmail(emails, "New Vulnerabilities Report", html);
+            appLogger.info(LogEvents.EMAIL_SENT, "Finished run and sent alert email", new LinkedHashMap<>(Map.of("vulnerabilities", cvesToSend.size())));
 
             for (String cveId : cveIdsToSend) {
                 cveStateService.markCveAsSeen(cveId);
             }
+        } else {
+            appLogger.info(LogEvents.EMAIL_SENT, "Finished run without sending alert email", new LinkedHashMap<>(Map.of("vulnerabilities", cvesToSend.size())));
         }
 
-        appLogger.info(LogEvents.EMAIL_SENT, "Finished scheduled run and sent alert email", new LinkedHashMap<>(Map.of("vulnerabilities", cvesToSend.size())));
     }
 }

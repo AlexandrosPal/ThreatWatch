@@ -11,10 +11,8 @@ import org.threatwatch.models.NotificationTypes;
 import org.threatwatch.services.ProductsService;
 import org.threatwatch.services.SettingsService;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class SettingsServiceImpl implements SettingsService {
@@ -30,13 +28,16 @@ public class SettingsServiceImpl implements SettingsService {
     private static final String SETTINGS_SEVERITY_THRESHOLD_KEY = "settings:severityThreshold";
     private static final String SETTINGS_EARLY_ALERTS_KEY = "settings:earlyAlerts";
     private static final String SETTINGS_EMAILS_KEY = "settings:emails";
-    private static final String SETTINGS_NOTIFICATION_TYPES_KEY = "settings:notificationTypes";
+    private static final String SETTINGS_NOTIFICATION_TYPES_KEY = "settings:notificationsSelected";
     private static final String SETTINGS_PRODUCTS_SELECTED_KEY = "settings:productsSelected";
     private static final String SETTINGS_EMAIL_PROVIDER_HOST_KEY = "settings:emailProviderHost";
     private static final String SETTINGS_EMAIL_PROVIDER_PORT_KEY = "settings:emailProviderPort";
     private static final String SETTINGS_EMAIL_PROVIDER_USERNAME_KEY = "settings:emailProviderUsername";
     private static final String SETTINGS_EMAIL_PROVIDER_PASSWORD_KEY = "settings:emailProviderPassword";
     private static final String SETTINGS_NVD_API_KEY_KEY = "settings:nvdApiKey";
+    private static final String SETTINGS_DISCORD_WEBHOOK_URL = "settings:discordWebhookUrl";
+    private static final String SETTINGS_SLACK_WEBHOOK_URL = "settings:slackWebhookUrl";
+    private static final String SETTINGS_TEAMS_WEBHOOK_URL = "settings:teamsWebhookUrl";
 
     public SettingsServiceImpl(StringRedisTemplate redisTemplate, ProductsService productsService) {
         this.redisTemplate = redisTemplate;
@@ -90,7 +91,7 @@ public class SettingsServiceImpl implements SettingsService {
         }
     }
 
-    private void updateNotificationTypes(NotificationTypes notificationType) {
+    private void updateSelectedNotifications(NotificationTypes notificationType) {
         if (notificationType != null) {
             if (Boolean.TRUE.equals(redisTemplate.opsForSet().isMember(SETTINGS_NOTIFICATION_TYPES_KEY, String.valueOf(notificationType)))) {
                 redisTemplate.opsForSet().remove(SETTINGS_NOTIFICATION_TYPES_KEY, String.valueOf(notificationType));
@@ -174,6 +175,38 @@ public class SettingsServiceImpl implements SettingsService {
         }
     }
 
+    private void updateDiscordWebhookUrl(String discordWebhookUrl) {
+        if (discordWebhookUrl != null) {
+            redisTemplate.opsForValue().set(SETTINGS_DISCORD_WEBHOOK_URL, discordWebhookUrl);
+
+            appLogger.info(LogEvents.SETTINGS_UPDATE, "Updated Discord webhook URL", new LinkedHashMap<>(Map.of("discordWebhookUrl", discordWebhookUrl)));
+        }
+    }
+
+    private void updateSlackWebhookUrl(String slackWebhookUrl) {
+        if (slackWebhookUrl != null) {
+            redisTemplate.opsForValue().set(SETTINGS_SLACK_WEBHOOK_URL, slackWebhookUrl);
+
+            appLogger.info(LogEvents.SETTINGS_UPDATE, "Updated Slack webhook URL", new LinkedHashMap<>(Map.of("slackWebhookUrl", slackWebhookUrl)));
+        }
+    }
+
+    private void updateTeamsWebhookUrl(String teamsWebhookUrl) {
+        if (teamsWebhookUrl != null) {
+            redisTemplate.opsForValue().set(SETTINGS_TEAMS_WEBHOOK_URL, teamsWebhookUrl);
+
+            appLogger.info(LogEvents.SETTINGS_UPDATE, "Updated Microsoft Teams webhook URL", new LinkedHashMap<>(Map.of("teamsWebhookUrl", teamsWebhookUrl)));
+        }
+    }
+
+    public static String toTitleCase(String input) {
+        if (input == null || input.isEmpty()) return input;
+
+        return Arrays.stream(input.toLowerCase().split(" "))
+                .map(word -> word.substring(0, 1).toUpperCase() + word.substring(1))
+                .collect(Collectors.joining(" "));
+    }
+
     @Override
     public SettingsResponseDto retrieveSettings() {
 
@@ -185,7 +218,14 @@ public class SettingsServiceImpl implements SettingsService {
         String earlyAlerts = redisTemplate.opsForValue().get(SETTINGS_EARLY_ALERTS_KEY);
 
         Set<String> emails = redisTemplate.opsForSet().members(SETTINGS_EMAILS_KEY);
-        Set<String> notificationTypes = redisTemplate.opsForSet().members(SETTINGS_NOTIFICATION_TYPES_KEY);
+        Set<String> supportedNotifications = Arrays.stream(NotificationTypes.values())
+                .map(String::valueOf)
+                .map(SettingsServiceImpl::toTitleCase)
+                .collect(Collectors.toSet());
+        Set<String> notificationsSelected = redisTemplate.opsForSet().members(SETTINGS_NOTIFICATION_TYPES_KEY).stream()
+                .map(String::valueOf)
+                .map(SettingsServiceImpl::toTitleCase)
+                .collect(Collectors.toSet());
 
         Set<String> supportedProducts = productsService.getProducts().keySet();
         Set<String> productsSelected = redisTemplate.opsForSet().members(SETTINGS_PRODUCTS_SELECTED_KEY);
@@ -203,12 +243,17 @@ public class SettingsServiceImpl implements SettingsService {
             nvdApiKeyProvided = "false";
         }
 
+        String discordWebhookUrl = redisTemplate.opsForValue().get(SETTINGS_DISCORD_WEBHOOK_URL);
+        String slackWebhookUrl = redisTemplate.opsForValue().get(SETTINGS_SLACK_WEBHOOK_URL);
+        String teamsWebhookUrl = redisTemplate.opsForValue().get(SETTINGS_TEAMS_WEBHOOK_URL);
+
         return SettingsResponseDto.builder()
                 .batchInterval(batchInterval)
                 .lookbackWindow(lookbackWindow)
                 .deduplicationWindow(deduplicationWindow)
                 .emails(emails)
-                .notificationTypes(notificationTypes)
+                .supportedNotifications(supportedNotifications)
+                .notificationsSelected(notificationsSelected)
                 .enabled(enabled)
                 .supportedProducts(supportedProducts)
                 .productsSelected(productsSelected)
@@ -220,6 +265,9 @@ public class SettingsServiceImpl implements SettingsService {
                 .emailProviderPassword(emailProviderPassword)
                 .nvdApiKey(nvdApiKey)
                 .nvdApiKeyProvided(nvdApiKeyProvided)
+                .discordWebhookUrl(discordWebhookUrl)
+                .slackWebhookUrl(slackWebhookUrl)
+                .teamsWebhookUrl(teamsWebhookUrl)
                 .build();
     }
 
@@ -228,7 +276,7 @@ public class SettingsServiceImpl implements SettingsService {
         updateBatchInterval(request.getBatchInterval());
         updateEnabledFlag(request.getEnabled());
         updateEmails(request.getEmail());
-        updateNotificationTypes(request.getNotificationType());
+        updateSelectedNotifications(request.getNotificationsSelected());
         updateSupportedProducts(request.getProductAddition());
         updateSeverityThreshold(request.getSeverityThreshold());
         updateEarlyAlertsFlag(request.getEarlyAlerts());
@@ -237,5 +285,8 @@ public class SettingsServiceImpl implements SettingsService {
         updateEmailProviderUsername(request.getEmailProviderUsername());
         updateEmailProviderPassword(request.getEmailProviderPassword());
         updateNvdApiKey(request.getNvdApiKey());
+        updateDiscordWebhookUrl(request.getDiscordWebhookUrl());
+        updateSlackWebhookUrl(request.getSlackWebhookUrl());
+        updateTeamsWebhookUrl(request.getTeamsWebhookUrl());
     }
 }

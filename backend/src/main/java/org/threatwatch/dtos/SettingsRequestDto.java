@@ -6,7 +6,7 @@ public class SettingsRequestDto {
 
     private Integer batchInterval;
     private String email;
-    private NotificationTypes notificationType;
+    private NotificationTypes notificationsSelected;
     private String enabled;
     private String productAddition;
     private String severityThreshold;
@@ -16,12 +16,15 @@ public class SettingsRequestDto {
     private String emailProviderUsername;
     private String emailProviderPassword;
     private String nvdApiKey;
+    private String discordWebhookUrl;
+    private String slackWebhookUrl;
+    private String teamsWebhookUrl;
 
     public Integer getBatchInterval() { return batchInterval; }
 
     public String getEmail() { return email; }
 
-    public NotificationTypes getNotificationType() { return notificationType; }
+    public NotificationTypes getNotificationsSelected() { return notificationsSelected; }
 
     public String getEnabled() { return this.enabled; }
 
@@ -40,4 +43,10 @@ public class SettingsRequestDto {
     public String getEmailProviderPassword() { return this.emailProviderPassword; }
 
     public String getNvdApiKey() { return nvdApiKey; }
+
+    public String getDiscordWebhookUrl() { return discordWebhookUrl; }
+
+    public String getSlackWebhookUrl() { return slackWebhookUrl; }
+
+    public String getTeamsWebhookUrl() { return teamsWebhookUrl; }
 }
