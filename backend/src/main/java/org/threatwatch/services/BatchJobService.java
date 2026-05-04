@@ -21,6 +21,7 @@ import java.util.*;
 public class BatchJobService {
 
     private final EmailService emailService;
+    private final DiscordService discordService;
     private final SettingsService settingsService;
     private final NvdRestService nvdRestService;
     private final CveParserService cveParserService;
@@ -34,8 +35,9 @@ public class BatchJobService {
     @Value("${backend.nvd.requests.interval}")
     private int nvdReqeustsInterval;
 
-    public BatchJobService(EmailService emailService, SettingsService settingsService, NvdRestService nvdRestService, CveParserService cveParserService, CveStateService cveStateService) {
+    public BatchJobService(EmailService emailService, DiscordService discordService, SettingsService settingsService, NvdRestService nvdRestService, CveParserService cveParserService, CveStateService cveStateService) {
         this.emailService = emailService;
+        this.discordService = discordService;
         this.settingsService = settingsService;
         this.nvdRestService = nvdRestService;
         this.cveParserService = cveParserService;
@@ -59,6 +61,8 @@ public class BatchJobService {
                 .withZone(ZoneOffset.UTC);
 
         SettingsResponseDto settings = settingsService.retrieveSettings();
+
+        Set<String> notificationsSelected = settings.getNotificationsSelected();
 
         int lookbackWindowInteger = Integer.parseInt(settings.getLookbackWindow());
         Instant rawPublishEndDatetime = Instant.now();
@@ -127,14 +131,28 @@ public class BatchJobService {
 
         if (!cveIdsToSend.isEmpty()) {
             html = html.replace("{{cveList}}", cveListHtml.toString());
-            emailService.sendHtmlEmail(emails, "New Vulnerabilities Report", html);
-            appLogger.info(LogEvents.EMAIL_SENT, "Finished run and sent alert email", new LinkedHashMap<>(Map.of("vulnerabilities", cvesToSend.size())));
+
+            for (String channel : notificationsSelected) {
+                switch (channel) {
+                    case "Email":
+                        emailService.sendHtmlEmail(emails, "New Vulnerabilities Report", html);
+                        appLogger.info(LogEvents.EMAIL_SENT, "Finished run and sent alert email", new LinkedHashMap<>(Map.of("vulnerabilities", cvesToSend.size())));
+                        break;
+                    case "Discord":
+                        String webhookUrl = settings.getDiscordWebhookUrl();
+                        String message = discordService.buildDiscordAlertMessage(cvesToSend);
+
+                        discordService.sendAlert(webhookUrl, message);
+                        appLogger.info(LogEvents.DISCORD_MESSAGE_SENT, "Finished run and sent alert Discord message", new LinkedHashMap<>(Map.of("vulnerabilities", cvesToSend.size())));
+                        break;
+                }
+            }
 
             for (String cveId : cveIdsToSend) {
                 cveStateService.markCveAsSeen(cveId);
             }
         } else {
-            appLogger.info(LogEvents.EMAIL_SENT, "Finished run without sending alert email", new LinkedHashMap<>(Map.of("vulnerabilities", cvesToSend.size())));
+            appLogger.info(LogEvents.BATCH_RUN, "Finished run without sending any alert", new LinkedHashMap<>(Map.of("vulnerabilities", cvesToSend.size())));
         }
 
     }
