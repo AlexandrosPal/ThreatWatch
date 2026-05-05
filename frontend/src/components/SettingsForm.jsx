@@ -108,7 +108,13 @@ export default function SettingsForm({ activeTab }) {
   const [selectedNotificationChannels, setSelectedNotificationChannels] = useState([]);
   const [selectedNotificationInput, setSelectedNotificationInput] = useState("");
 
-  const [webhookUrls, setWebhookUrls] = useState({
+  const [webhooks, setWebhooks] = useState({
+    discord: [],
+    slack: [],
+    teams: [],
+  });
+
+  const [webhookInputs, setWebhookInputs] = useState({
     discord: "",
     slack: "",
     teams: "",
@@ -160,10 +166,10 @@ export default function SettingsForm({ activeTab }) {
       setSelectedNotificationChannels(
         (data?.notificationsSelected || []).map((c) => c.toLowerCase())
       );
-      setWebhookUrls({
-        discord: data?.discordWebhookUrl || "",
-        slack: data?.slackWebhookUrl || "",
-        teams: data?.teamsWebhookUrl || "",
+      setWebhooks({
+        discord: data?.discordWebhookUrls || [],
+        slack: data?.slackWebhookUrls || [],
+        teams: data?.teamsWebhookUrls || [],
       });
       
       setEnabled(String(data?.enabled).toLowerCase() === "true");
@@ -469,11 +475,9 @@ export default function SettingsForm({ activeTab }) {
     }
   }
 
-  function handleSaveWebhook(channel) {
-    const url = webhookUrls[channel]?.trim();
+  async function handleAddWebhook(channel) {
+    const url = webhookInputs[channel]?.trim();
     if (!url) return;
-
-    setSavingWebhookChannel(channel);
 
     const fieldMap = {
       discord: "discordWebhookUrl",
@@ -481,21 +485,49 @@ export default function SettingsForm({ activeTab }) {
       teams: "teamsWebhookUrl",
     };
 
-    const fieldName = fieldMap[channel];
+    try {
+      setSavingWebhookChannel(channel);
 
-    patchSettings({
-      [fieldName]: url,
-    })
-      .then(() => {
-        flashWebhookSaved(channel);
-      })
-      .catch((err) => {
-        console.error(err);
-        alert("Failed to save webhook");
-      })
-      .finally(() => {
-        setSavingWebhookChannel(null);
+      await patchSettings({
+        [fieldMap[channel]]: url,
       });
+
+      setWebhookInputs((prev) => ({
+        ...prev,
+        [channel]: "",
+      }));
+
+      await loadSettings();
+      flashWebhookSaved(channel);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to add webhook");
+    } finally {
+      setSavingWebhookChannel(null);
+    }
+  }
+
+  async function handleRemoveWebhook(channel, urlToRemove) {
+    const fieldMap = {
+      discord: "discordWebhookUrl",
+      slack: "slackWebhookUrl",
+      teams: "teamsWebhookUrl",
+    };
+
+    try {
+      setSavingWebhookChannel(channel);
+
+      await patchSettings({
+        [fieldMap[channel]]: urlToRemove,
+      });
+
+      await loadSettings();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to remove webhook");
+    } finally {
+      setSavingWebhookChannel(null);
+    }
   }
 
   function renderWebhookSection(channel) {
@@ -504,17 +536,17 @@ export default function SettingsForm({ activeTab }) {
         <div className="card-header">
           <div>
             <h2>{getWebhookTitle(channel)}</h2>
-            <p>Configure the webhook URL used to send vulnerability alerts.</p>
+            <p>Add or remove webhook URLs used to send vulnerability alerts.</p>
           </div>
         </div>
 
-        <div className="provider-row">
+        <div className="input-row">
           <input
             className="text-input"
             type="text"
-            value={webhookUrls[channel]}
+            value={webhookInputs[channel]}
             onChange={(e) => {
-              setWebhookUrls((prev) => ({
+              setWebhookInputs((prev) => ({
                 ...prev,
                 [channel]: e.target.value,
               }));
@@ -522,19 +554,18 @@ export default function SettingsForm({ activeTab }) {
             }}
             placeholder={`${getWebhookTitle(channel)} URL`}
           />
-        </div>
 
-        <div className="save-action-wrap">
           <button
-            type="button"
-            className="primary-button"
-            onClick={() => handleSaveWebhook(channel)}
+            className="icon-button"
+            onClick={() => handleAddWebhook(channel)}
             disabled={
               savingWebhookChannel === channel ||
-              webhookUrls[channel].trim() === ""
+              webhookInputs[channel].trim() === ""
             }
+            aria-label={`Add ${channel} webhook`}
+            title={`Add ${channel} webhook`}
           >
-            {savingWebhookChannel === channel ? "Saving..." : "Save"}
+            +
           </button>
 
           <span
@@ -544,6 +575,27 @@ export default function SettingsForm({ activeTab }) {
           >
             ✓
           </span>
+        </div>
+
+        <div className="chips-wrap">
+          {webhooks[channel].length === 0 ? (
+            <p className="muted-text">No webhooks added yet.</p>
+          ) : (
+            webhooks[channel].map((url) => (
+              <div key={url} className="chip">
+                <span>{url}</span>
+                <button
+                  className="chip-remove"
+                  onClick={() => handleRemoveWebhook(channel, url)}
+                  disabled={savingWebhookChannel === channel}
+                  aria-label={`Remove ${channel} webhook`}
+                  title={`Remove ${channel} webhook`}
+                >
+                  ×
+                </button>
+              </div>
+            ))
+          )}
         </div>
       </section>
     );
