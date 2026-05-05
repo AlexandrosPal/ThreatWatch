@@ -20,7 +20,7 @@ public class VersionMatcher {
         if (description.contains("version")) {
             return new MatchResult(
                     MatchConfidence.CONFIRMED,
-                    "Exact version mentioned in CVE description
+                    "Exact version mentioned in CVE description"
             );
         }
 
@@ -33,6 +33,11 @@ public class VersionMatcher {
                 );
             }
         }
+
+        return new MatchResult(
+                MatchConfidence.NO_MATCH,
+                "No version matched"
+        );
     }
 
     private List<String> extractWildcards(String text) {
