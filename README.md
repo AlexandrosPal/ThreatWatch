@@ -1,17 +1,19 @@
 # ThreatWatch
 
 ## Introduction
-**ThreatWatch** is a lightweight, self-hosted CVE monitoring solution designed for developers and teams to help them stay informed about vulnerabilities affecting the technologies they use. It delivers alerts from through multiple channels, like email, Discord, or Slack. It offers extensive customization when it comes to the products it monitors, polling intervals and control how CVEs are filtered, tracked and reported.
+**ThreatWatch** is a lightweight, self-hosted CVE monitoring solution designed for developers and teams to help them stay informed about vulnerabilities affecting the technologies they use. 
+
+It delivers alerts from through multiple channels, like email, Discord, or Slack. It offers extensive customization when it comes to the products it monitors, polling intervals and control how CVEs are filtered, tracked and reported.
 
 ## Features
-- Self-hosted CVE monitoring
-- NVD API integration
-- Configurable watchlist of technologies
-- Severity threshold filtering
-- Early alerts for CVEs without CVSS scores
-- Email provider configuration
-- Optional NVD API key support for higher request throughput
-- Manual scan execution
+- CVE monitoring from NVD
+- Early vulnerability detection before full NVD enrichment
+- CPE-based component tracking
+- Discord / Slack / Teams / Email notifications
+- Severity filtering
+- Deduplication
+- Self-hosted with Docker Compose
+- Lightweight and AI-free by default
 
 ## Architecture Overview
 ThreatWatch consists of three main components:
@@ -26,8 +28,19 @@ ThreatWatch consists of three main components:
 - Docker Compose
 - Optional: NVD API key
 
+### Entrypoints
+- Frontend settings page -> localhost:5173
+- Backend APIs -> localhost:8080
+
+### Notifications Supported
+- Email
+- Discord
+- Slack
+- MS Teams
+
 ### Run with Docker Compose
 
 ```bash
+git clone https://github.com/AlexandrosPal/ThreatWatch.git
 cd .\infra\
 docker compose up --build
