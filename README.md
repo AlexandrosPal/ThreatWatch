@@ -42,5 +42,14 @@ ThreatWatch consists of three main components:
 
 ```bash
 git clone https://github.com/AlexandrosPal/ThreatWatch.git
-cd .\infra\
+cd infra/
 docker compose up --build
+```
+
+If run on a VM, one way to open settings page is via port-forwarding:
+```bash
+ssh -i path_to_key \
+    -L 5173:vm_private_ip:5173 \
+    -L 8080:vm_private_ip:8080 \
+    user@vm_public_ip
+```
