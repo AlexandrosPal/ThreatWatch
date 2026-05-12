@@ -9,6 +9,7 @@ import org.threatwatch.cve.parsing.CveParserService;
 import org.threatwatch.cve.state.CveStateService;
 import org.threatwatch.notifications.NotificationSender;
 import org.threatwatch.cve.ingestion.NvdRestService;
+import org.threatwatch.notifications.teams.TeamsNotificationSender;
 import org.threatwatch.settings.SettingsResponseDto;
 import org.threatwatch.loggers.AppLogger;
 import org.threatwatch.loggers.LogEvents;
@@ -35,6 +36,7 @@ public class BatchJobService {
     private final EmailNotificationSender emailNotificationSender;
     private final DiscordNotificationSender discordNotificationSender;
     private final SlackNotificationSender slackNotificationSender;
+    private final TeamsNotificationSender teamsNotificationSender;
     private final SettingsService settingsService;
     private final NvdRestService nvdRestService;
     private final CveParserService cveParserService;
@@ -48,12 +50,13 @@ public class BatchJobService {
     @Value("${backend.nvd.requests.interval}")
     private int nvdReqeustsInterval;
 
-    public BatchJobService(List<NotificationSender> senderList, EmailNotificationSender emailNotificationSender, DiscordNotificationSender discordNotificationSender, SlackNotificationSender slackNotificationSender, SettingsService settingsService, NvdRestService nvdRestService, CveParserService cveParserService, CveStateService cveStateService) {
+    public BatchJobService(List<NotificationSender> senderList, EmailNotificationSender emailNotificationSender, DiscordNotificationSender discordNotificationSender, SlackNotificationSender slackNotificationSender, TeamsNotificationSender teamsNotificationSender, SettingsService settingsService, NvdRestService nvdRestService, CveParserService cveParserService, CveStateService cveStateService) {
         this.senders = senderList.stream()
                 .collect(Collectors.toMap(NotificationSender::supports, s -> s));
         this.emailNotificationSender = emailNotificationSender;
         this.discordNotificationSender = discordNotificationSender;
         this.slackNotificationSender = slackNotificationSender;
+        this.teamsNotificationSender = teamsNotificationSender;
         this.settingsService = settingsService;
         this.nvdRestService = nvdRestService;
         this.cveParserService = cveParserService;
@@ -174,6 +177,13 @@ public class BatchJobService {
                         request.setMessage(slackNotificationSender.buildSlackAlertMessage(cvesToSend));
 
                         appLogger.info(LogEvents.SLACK_MESSAGE_SENT, "Finished run and sent alert Slack message", new LinkedHashMap<>(Map.of("vulnerabilities", cvesToSend.size())));
+                        break;
+
+                    case TEAMS:
+                        request.setWebhookUrls(settings.getTeamsWebhookUrls());
+                        request.setMessage(teamsNotificationSender.buildTeamsAlertMessage(cvesToSend));
+
+                        appLogger.info(LogEvents.TEAMS_MESSAGE_SENT, "Finished run and sent alert Teams message", new LinkedHashMap<>(Map.of("vulnerabilities", cvesToSend.size())));
                         break;
                 }
 
