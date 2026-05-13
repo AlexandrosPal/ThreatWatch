@@ -158,28 +158,49 @@ public class EmailNotificationSender implements NotificationSender {
         long mediumCount = countSeverity(cvesToSend, "MEDIUM");
         long lowCount = countSeverity(cvesToSend, "LOW");
 
+        Map.Entry<String, Long> topProduct = cvesByProduct.entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .orElse(null);
+
         StringBuilder html = new StringBuilder();
 
         html.append("<div style=\"border:1px solid #e5e7eb;border-radius:14px;background:#ffffff;overflow:hidden;\">");
 
         html.append("<div style=\"padding:18px 20px;background:#111827;color:white;\">")
-                .append("<div style=\"font-size:13px;color:#cbd5e1;margin-bottom:4px;\">ThreatWatch Report</div>")
+                .append("<div style=\"font-size:13px;color:#cbd5e1;margin-bottom:4px;\">🚨 ThreatWatch Security Report</div>")
                 .append("<div style=\"font-size:22px;font-weight:800;line-height:1.2;\">")
                 .append(cvesToSend.size())
-                .append(" new vulnerabilities detected")
-                .append("</div>")
+                .append(" vulnerabilities affecting your monitored stack")
                 .append("</div>");
+
+        if (topProduct != null) {
+            html.append("<div style=\"font-size:13px;color:#cbd5e1;margin-top:8px;\">")
+                    .append("Most affected: <strong style=\"color:white;\">")
+                    .append(topProduct.getKey())
+                    .append("</strong> (")
+                    .append(topProduct.getValue())
+                    .append(" CVE")
+                    .append(topProduct.getValue() == 1 ? "" : "s")
+                    .append(")")
+                    .append("</div>");
+        }
+
+        html.append("</div>");
 
         html.append("<div style=\"padding:18px 20px;\">");
 
-        html.append("<div style=\"display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;\">")
-                .append(buildSeverityBox("Critical", criticalCount, "#b42318"))
-                .append(buildSeverityBox("High", highCount, "#d92d20"))
-                .append(buildSeverityBox("Medium", mediumCount, "#f79009"))
-                .append(buildSeverityBox("Low", lowCount, "#12b76a"))
-                .append("</div>");
+        html.append("<table style=\"width:100%;margin-bottom:20px;border-spacing:8px;border-collapse:separate;\">")
+                .append("<tr>")
+                .append(buildSeverityBoxTd("Critical", criticalCount, "#b42318"))
+                .append(buildSeverityBoxTd("High", highCount, "#d92d20"))
+                .append(buildSeverityBoxTd("Medium", mediumCount, "#f79009"))
+                .append(buildSeverityBoxTd("Low", lowCount, "#12b76a"))
+                .append("</tr>")
+                .append("</table>");
 
-        html.append("<div style=\"font-size:15px;font-weight:800;color:#111827;margin-bottom:10px;\">Affected monitored products</div>");
+        html.append("<div style=\"font-size:15px;font-weight:800;color:#111827;margin-bottom:10px;\">")
+                .append("Affected monitored products")
+                .append("</div>");
 
         html.append("<table style=\"width:100%;border-collapse:collapse;font-size:14px;\">")
                 .append("<thead>")
@@ -204,13 +225,24 @@ public class EmailNotificationSender implements NotificationSender {
         html.append("</tbody></table>");
 
         html.append("<div style=\"margin-top:16px;padding:12px 14px;border-radius:10px;background:#f9fafb;color:#6b7280;font-size:13px;line-height:1.45;\">")
-                .append("This is a summary report because numerous CVEs were found. ")
-                .append("Open NVD to review the full vulnerability list.")
+                .append("This is a summary report because more than 10 CVEs were found. ")
+                .append("Open ThreatWatch to review the full vulnerability list.")
                 .append("</div>");
 
         html.append("</div></div>");
 
         return html.toString();
+    }
+
+    private String buildSeverityBoxTd(String label, long count, String color) {
+        return "<td style=\"border:1px solid #e5e7eb;border-radius:12px;padding:12px;background:#ffffff;width:25%;\">"
+                + "<div style=\"font-size:11px;text-transform:uppercase;color:#6b7280;font-weight:800;margin-bottom:6px;\">"
+                + label
+                + "</div>"
+                + "<div style=\"font-size:26px;font-weight:900;color:" + color + ";\">"
+                + count
+                + "</div>"
+                + "</td>";
     }
 
     private long countSeverity(List<CveAlertItem> cves, String severity) {
@@ -220,7 +252,7 @@ public class EmailNotificationSender implements NotificationSender {
     }
 
     private String buildSeverityBox(String label, long count, String color) {
-        return "<div style=\"border:1px solid #e5e7eb;border-radius:12px;padding:12px;background:#ffffff;\">"
+        return "<div style=\"border:1px solid #e5e7eb;border-radius:12px;padding:12px;margin-bottom:2px;background:#ffffff;\">"
                 + "<div style=\"font-size:11px;text-transform:uppercase;color:#6b7280;font-weight:800;margin-bottom:6px;\">"
                 + label
                 + "</div>"
