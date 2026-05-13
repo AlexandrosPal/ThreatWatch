@@ -11,23 +11,21 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.threatwatch.cve.model.CveAlertItem;
+import org.threatwatch.loggers.AppLogger;
+import org.threatwatch.loggers.LogEvents;
 import org.threatwatch.notifications.NotificationChannel;
 import org.threatwatch.notifications.NotificationRequestDto;
 import org.threatwatch.notifications.NotificationSender;
 import org.threatwatch.settings.SettingsResponseDto;
-import org.threatwatch.loggers.AppLogger;
-import org.threatwatch.loggers.LogEvents;
-import org.threatwatch.cve.model.CveAlertItem;
 import org.threatwatch.settings.SettingsService;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class EmailNotificationSender implements NotificationSender {
@@ -127,6 +125,115 @@ public class EmailNotificationSender implements NotificationSender {
         message.setContent(body, "text/html; charset=utf-8");
 
         dynamicMailSender.send(message);
+    }
+
+    public String buildEmailAlertHtml(List<CveAlertItem> cvesToSend) {
+        if (cvesToSend.size() > 10) {
+            return buildEmailSummaryHtml(cvesToSend);
+        }
+
+        return buildEmailDetailedHtml(cvesToSend);
+    }
+
+    private String buildEmailDetailedHtml(List<CveAlertItem> cvesToSend) {
+        StringBuilder html = new StringBuilder();
+
+        for (CveAlertItem cve : cvesToSend) {
+            html.append(buildCveHtml(cve.getProduct(), cve));
+        }
+
+        return html.toString();
+    }
+
+    private String buildEmailSummaryHtml(List<CveAlertItem> cvesToSend) {
+        Map<String, Long> cvesByProduct = cvesToSend.stream()
+                .collect(Collectors.groupingBy(
+                        CveAlertItem::getProduct,
+                        LinkedHashMap::new,
+                        Collectors.counting()
+                ));
+
+        long criticalCount = countSeverity(cvesToSend, "CRITICAL");
+        long highCount = countSeverity(cvesToSend, "HIGH");
+        long mediumCount = countSeverity(cvesToSend, "MEDIUM");
+        long lowCount = countSeverity(cvesToSend, "LOW");
+
+        StringBuilder html = new StringBuilder();
+
+        html.append("<div style=\"border:1px solid #e5e7eb;border-radius:14px;background:#ffffff;overflow:hidden;\">");
+
+        html.append("<div style=\"padding:18px 20px;background:#111827;color:white;\">")
+                .append("<div style=\"font-size:13px;color:#cbd5e1;margin-bottom:4px;\">ThreatWatch Report</div>")
+                .append("<div style=\"font-size:22px;font-weight:800;line-height:1.2;\">")
+                .append(cvesToSend.size())
+                .append(" new vulnerabilities detected")
+                .append("</div>")
+                .append("</div>");
+
+        html.append("<div style=\"padding:18px 20px;\">");
+
+        html.append("<div style=\"display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;\">")
+                .append(buildSeverityBox("Critical", criticalCount, "#b42318"))
+                .append(buildSeverityBox("High", highCount, "#d92d20"))
+                .append(buildSeverityBox("Medium", mediumCount, "#f79009"))
+                .append(buildSeverityBox("Low", lowCount, "#12b76a"))
+                .append("</div>");
+
+        html.append("<div style=\"font-size:15px;font-weight:800;color:#111827;margin-bottom:10px;\">Affected monitored products</div>");
+
+        html.append("<table style=\"width:100%;border-collapse:collapse;font-size:14px;\">")
+                .append("<thead>")
+                .append("<tr>")
+                .append("<th style=\"text-align:left;padding:10px 0;border-bottom:1px solid #e5e7eb;color:#6b7280;font-size:12px;text-transform:uppercase;\">Product</th>")
+                .append("<th style=\"text-align:right;padding:10px 0;border-bottom:1px solid #e5e7eb;color:#6b7280;font-size:12px;text-transform:uppercase;\">CVEs</th>")
+                .append("</tr>")
+                .append("</thead>")
+                .append("<tbody>");
+
+        cvesByProduct.entrySet().stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+                .forEach(entry -> html.append("<tr>")
+                        .append("<td style=\"padding:11px 0;border-bottom:1px solid #f3f4f6;color:#111827;font-weight:700;\">")
+                        .append(entry.getKey())
+                        .append("</td>")
+                        .append("<td style=\"padding:11px 0;border-bottom:1px solid #f3f4f6;text-align:right;color:#374151;font-weight:700;\">")
+                        .append(entry.getValue())
+                        .append("</td>")
+                        .append("</tr>"));
+
+        html.append("</tbody></table>");
+
+        html.append("<div style=\"margin-top:16px;padding:12px 14px;border-radius:10px;background:#f9fafb;color:#6b7280;font-size:13px;line-height:1.45;\">")
+                .append("This is a summary report because numerous CVEs were found. ")
+                .append("Open NVD to review the full vulnerability list.")
+                .append("</div>");
+
+        html.append("</div></div>");
+
+        return html.toString();
+    }
+
+    private long countSeverity(List<CveAlertItem> cves, String severity) {
+        return cves.stream()
+                .filter(cve -> cve.getSeverity().name().equals(severity))
+                .count();
+    }
+
+    private String buildSeverityBox(String label, long count, String color) {
+        return "<div style=\"border:1px solid #e5e7eb;border-radius:12px;padding:12px;background:#ffffff;\">"
+                + "<div style=\"font-size:11px;text-transform:uppercase;color:#6b7280;font-weight:800;margin-bottom:6px;\">"
+                + label
+                + "</div>"
+                + "<div style=\"font-size:22px;font-weight:900;color:" + color + ";\">"
+                + count
+                + "</div>"
+                + "</div>";
+    }
+
+    private String buildSeverityPill(String label, long count, String color) {
+        return "<div style=\"background:" + color + ";color:white;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:700;\">"
+                + label + ": " + count
+                + "</div>";
     }
 
     public String buildCveHtml(String product, CveAlertItem cve) {
