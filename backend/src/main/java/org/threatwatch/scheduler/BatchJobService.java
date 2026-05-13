@@ -94,7 +94,7 @@ public class BatchJobService {
         String publishStartDatetime = dateTimeFormatter.format(rawPublishStartDatetime);
         Set<String> products = settings.getProductsSelected();
 
-        StringBuilder cveListHtml = new StringBuilder();
+//        StringBuilder cveListHtml = new StringBuilder();
         String html = emailNotificationSender.loadHtmlTemplate();
         Set<String> emails = settings.getEmails();
         Set<String> cveIdsToSend = new HashSet<>();
@@ -146,13 +146,10 @@ public class BatchJobService {
                 )
         );
 
-        for (CveAlertItem cve : cvesToSend) {
-            String cveHtml = emailNotificationSender.buildCveHtml(cve.getProduct(), cve);
-            cveListHtml.append(cveHtml);
-        }
+        String cveListHtml = emailNotificationSender.buildEmailAlertHtml(cvesToSend);
 
         if (!cveIdsToSend.isEmpty()) {
-            html = html.replace("{{cveList}}", cveListHtml.toString());
+            html = html.replace("{{cveList}}", cveListHtml);
 
             for (NotificationChannel channel : notificationsSelected) {
                 NotificationRequestDto request = new NotificationRequestDto();
