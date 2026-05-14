@@ -193,6 +193,8 @@ public class EmailNotificationSender implements NotificationSender {
                 .append("<tr>")
                 .append(buildSeverityBoxTd("Critical", criticalCount, "#b42318"))
                 .append(buildSeverityBoxTd("High", highCount, "#d92d20"))
+                .append("</tr>")
+                .append("<tr>")
                 .append(buildSeverityBoxTd("Medium", mediumCount, "#f79009"))
                 .append(buildSeverityBoxTd("Low", lowCount, "#12b76a"))
                 .append("</tr>")
@@ -225,8 +227,8 @@ public class EmailNotificationSender implements NotificationSender {
         html.append("</tbody></table>");
 
         html.append("<div style=\"margin-top:16px;padding:12px 14px;border-radius:10px;background:#f9fafb;color:#6b7280;font-size:13px;line-height:1.45;\">")
-                .append("This is a summary report because more than 10 CVEs were found. ")
-                .append("Open ThreatWatch to review the full vulnerability list.")
+                .append("This is a summary report because numerous CVEs were found. ")
+                .append("Consult NVD to review the new vulnerabilities.")
                 .append("</div>");
 
         html.append("</div></div>");
@@ -235,7 +237,7 @@ public class EmailNotificationSender implements NotificationSender {
     }
 
     private String buildSeverityBoxTd(String label, long count, String color) {
-        return "<td style=\"border:1px solid #e5e7eb;border-radius:12px;padding:12px;background:#ffffff;width:25%;\">"
+        return "<td style=\"border:1px solid #e5e7eb;border-radius:12px;padding:12px;background:#ffffff;width:50%;\">"
                 + "<div style=\"font-size:11px;text-transform:uppercase;color:#6b7280;font-weight:800;margin-bottom:6px;\">"
                 + label
                 + "</div>"
