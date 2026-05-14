@@ -31,6 +31,7 @@ services:
         condition: service_healthy
   db:
     image: redis
+    command: redis-server --appendonly yes
     volumes: 
       - threatwatch_redis_backup:/data
     ports: 
