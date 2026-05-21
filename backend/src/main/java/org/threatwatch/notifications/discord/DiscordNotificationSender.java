@@ -2,7 +2,7 @@ package org.threatwatch.notifications.discord;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
-import org.threatwatch.cve.model.CveAlertItemRecord;
+import org.threatwatch.cve.model.CveAlertItem;
 import org.threatwatch.notifications.NotificationChannel;
 import org.threatwatch.notifications.NotificationRequestDto;
 import org.threatwatch.notifications.NotificationSender;
@@ -21,7 +21,7 @@ public class DiscordNotificationSender implements NotificationSender {
         this.restClient = restClientBuilder.build();
     }
 
-    public String buildDiscordAlertMessage(List<CveAlertItemRecord> cvesToSend) {
+    public String buildDiscordAlertMessage(List<CveAlertItem> cvesToSend) {
         if (cvesToSend.size() > 10) {
             return buildDiscordSummaryMessage(cvesToSend);
         }
@@ -29,10 +29,10 @@ public class DiscordNotificationSender implements NotificationSender {
         return buildDiscordDetailedMessage(cvesToSend);
     }
 
-    private String buildDiscordSummaryMessage(List<CveAlertItemRecord> cvesToSend) {
+    private String buildDiscordSummaryMessage(List<CveAlertItem> cvesToSend) {
         Map<String, Long> cvesByProduct = cvesToSend.stream()
                 .collect(Collectors.groupingBy(
-                        CveAlertItemRecord::getProduct,
+                        CveAlertItem::getProduct,
                         LinkedHashMap::new,
                         Collectors.counting()
                 ));
@@ -61,7 +61,7 @@ public class DiscordNotificationSender implements NotificationSender {
         return message.toString();
     }
 
-    private String buildDiscordDetailedMessage(List<CveAlertItemRecord> cvesToSend) {
+    private String buildDiscordDetailedMessage(List<CveAlertItem> cvesToSend) {
         StringBuilder message = new StringBuilder();
 
         message.append("## 🚨 ThreatWatch Vulnerability Report\n\n");

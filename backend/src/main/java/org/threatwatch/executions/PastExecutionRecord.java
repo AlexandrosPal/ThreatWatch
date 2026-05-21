@@ -1,6 +1,6 @@
 package org.threatwatch.executions;
 
-import org.threatwatch.cve.model.CveAlertItemRecord;
+import org.threatwatch.cve.model.CveAlertItem;
 
 import java.util.HashMap;
 import java.util.List;
@@ -9,10 +9,10 @@ public class PastExecutionRecord {
 
     private final Integer totalCves;
     private final String timestamp;
-    private final List<CveAlertItemRecord> cves;
+    private final List<CveAlertItem> cves;
     private final HashMap<String, Object> notificationsSent;
 
-    public PastExecutionRecord(Integer totalCves, String timestamp, List<CveAlertItemRecord> cves, HashMap<String, Object> notificationsSent) {
+    public PastExecutionRecord(Integer totalCves, String timestamp, List<CveAlertItem> cves, HashMap<String, Object> notificationsSent) {
         this.totalCves = totalCves;
         this.timestamp = timestamp;
         this.cves = cves;
@@ -23,7 +23,7 @@ public class PastExecutionRecord {
 
     public String getTimestamp() { return timestamp; }
 
-    public List<CveAlertItemRecord> getCves() { return cves; }
+    public List<CveAlertItem> getCves() { return cves; }
 
     public HashMap<String, Object> getNotificationsSent() { return notificationsSent; }
 

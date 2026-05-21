@@ -1,6 +1,6 @@
 package org.threatwatch.cve.model;
 
-public class CveAlertItemRecord {
+public class CveAlertItem {
 
     private final String product;
     private final String id;
@@ -9,7 +9,7 @@ public class CveAlertItemRecord {
     private final Float score;
     private final String published;
 
-    public CveAlertItemRecord(String product, String id, String description, Severity severity, Float score, String published) {
+    public CveAlertItem(String product, String id, String description, Severity severity, Float score, String published) {
         this.product = product;
         this.id = id;
         this.description = description;

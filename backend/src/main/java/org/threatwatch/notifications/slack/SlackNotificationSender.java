@@ -2,7 +2,7 @@ package org.threatwatch.notifications.slack;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
-import org.threatwatch.cve.model.CveAlertItemRecord;
+import org.threatwatch.cve.model.CveAlertItem;
 import org.threatwatch.notifications.NotificationChannel;
 import org.threatwatch.notifications.NotificationRequestDto;
 import org.threatwatch.notifications.NotificationSender;
@@ -26,7 +26,7 @@ public class SlackNotificationSender implements NotificationSender {
         return NotificationChannel.SLACK;
     }
 
-    public String buildSlackAlertMessage(List<CveAlertItemRecord> cvesToSend) {
+    public String buildSlackAlertMessage(List<CveAlertItem> cvesToSend) {
         if (cvesToSend.size() > 10) {
             return buildSlackSummaryMessage(cvesToSend);
         }
@@ -34,10 +34,10 @@ public class SlackNotificationSender implements NotificationSender {
         return buildSlackDetailedMessage(cvesToSend);
     }
 
-    private String buildSlackSummaryMessage(List<CveAlertItemRecord> cvesToSend) {
+    private String buildSlackSummaryMessage(List<CveAlertItem> cvesToSend) {
         Map<String, Long> cvesByProduct = cvesToSend.stream()
                 .collect(Collectors.groupingBy(
-                        CveAlertItemRecord::getProduct,
+                        CveAlertItem::getProduct,
                         LinkedHashMap::new,
                         Collectors.counting()
                 ));
@@ -66,7 +66,7 @@ public class SlackNotificationSender implements NotificationSender {
         return message.toString();
     }
 
-    private String buildSlackDetailedMessage(List<CveAlertItemRecord> cvesToSend) {
+    private String buildSlackDetailedMessage(List<CveAlertItem> cvesToSend) {
         StringBuilder message = new StringBuilder();
 
         message.append("🚨 *ThreatWatch Vulnerability Report*\n\n");

@@ -14,7 +14,7 @@ import org.threatwatch.notifications.teams.TeamsNotificationSender;
 import org.threatwatch.settings.SettingsResponseDto;
 import org.threatwatch.loggers.AppLogger;
 import org.threatwatch.loggers.LogEvents;
-import org.threatwatch.cve.model.CveAlertItemRecord;
+import org.threatwatch.cve.model.CveAlertItem;
 import org.threatwatch.notifications.NotificationChannel;
 import org.threatwatch.cve.parsing.ParsedCveModel;
 import org.threatwatch.notifications.discord.DiscordNotificationSender;
@@ -101,7 +101,7 @@ public class BatchJobService {
         String html = emailNotificationSender.loadHtmlTemplate();
         Set<String> emails = settings.getEmails();
         Set<String> cveIdsToSend = new HashSet<>();
-        List<CveAlertItemRecord> cvesToSend = new ArrayList<>();
+        List<CveAlertItem> cvesToSend = new ArrayList<>();
 
         for (String product : products) {
             Thread.sleep(nvdReqeustsInterval);
@@ -130,7 +130,7 @@ public class BatchJobService {
 
                 validCveCounter += 1;
                 cveIdsToSend.add(cveId);
-                cvesToSend.add(new CveAlertItemRecord(
+                cvesToSend.add(new CveAlertItem(
                         product,
                         parsedCve.getCveId(),
                         parsedCve.getDescription(),
@@ -144,7 +144,7 @@ public class BatchJobService {
 
         cvesToSend.sort(
                 Comparator.comparing(
-                        CveAlertItemRecord::getScore,
+                        CveAlertItem::getScore,
                         Comparator.nullsLast(Comparator.reverseOrder())
                 )
         );

@@ -2,7 +2,7 @@ package org.threatwatch.executions;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
-import org.threatwatch.cve.model.CveAlertItemRecord;
+import org.threatwatch.cve.model.CveAlertItem;
 import org.threatwatch.notifications.NotificationChannel;
 import org.threatwatch.settings.SettingsResponseDto;
 import org.threatwatch.settings.SettingsService;
@@ -29,7 +29,7 @@ public class PastExecutionService {
         this.objectMapper = objectMapper;
     }
 
-    public void savePastExecution(List<CveAlertItemRecord> cvesToSend, SettingsResponseDto settings) {
+    public void savePastExecution(List<CveAlertItem> cvesToSend, SettingsResponseDto settings) {
         String timestamp = String.valueOf(Instant.now());
         String pastExecutionRedisKey = PAST_EXECUTION_TEMPLATE_KEY + timestamp;
         Set<NotificationChannel> notificationsSelected = settings.getNotificationsSelected().stream()
