@@ -462,8 +462,7 @@ public class EmailNotificationSender implements NotificationSender {
                                 "line-height:1.45;\">"
                 )
                 .append(
-                        "This is a summary report because numerous CVEs " +
-                                "were found."
+                        "This is a summary report, please consult \"Executions\" tab in main app page to view the full list in detail."
                 )
                 .append("</div>");
 
