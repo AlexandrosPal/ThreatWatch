@@ -4,6 +4,7 @@ import jakarta.mail.MessagingException;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.threatwatch.executions.PastExecutionService;
 import org.threatwatch.notifications.NotificationRequestDto;
 import org.threatwatch.cve.parsing.CveParserService;
 import org.threatwatch.cve.state.CveStateService;
@@ -41,6 +42,7 @@ public class BatchJobService {
     private final NvdRestService nvdRestService;
     private final CveParserService cveParserService;
     private final CveStateService cveStateService;
+    private final PastExecutionService pastExecutionService;
 
     private static final AppLogger appLogger = new AppLogger(LoggerFactory.getLogger(BatchJobService.class));
 
@@ -50,7 +52,7 @@ public class BatchJobService {
     @Value("${backend.nvd.requests.interval}")
     private int nvdReqeustsInterval;
 
-    public BatchJobService(List<NotificationSender> senderList, EmailNotificationSender emailNotificationSender, DiscordNotificationSender discordNotificationSender, SlackNotificationSender slackNotificationSender, TeamsNotificationSender teamsNotificationSender, SettingsService settingsService, NvdRestService nvdRestService, CveParserService cveParserService, CveStateService cveStateService) {
+    public BatchJobService(List<NotificationSender> senderList, EmailNotificationSender emailNotificationSender, DiscordNotificationSender discordNotificationSender, SlackNotificationSender slackNotificationSender, TeamsNotificationSender teamsNotificationSender, SettingsService settingsService, NvdRestService nvdRestService, CveParserService cveParserService, CveStateService cveStateService, PastExecutionService pastExecutionService) {
         this.senders = senderList.stream()
                 .collect(Collectors.toMap(NotificationSender::supports, s -> s));
         this.emailNotificationSender = emailNotificationSender;
@@ -61,6 +63,7 @@ public class BatchJobService {
         this.nvdRestService = nvdRestService;
         this.cveParserService = cveParserService;
         this.cveStateService = cveStateService;
+        this.pastExecutionService = pastExecutionService;
     }
 
     private boolean descriptionMatchesProduct(String description, String product) {
@@ -190,6 +193,8 @@ public class BatchJobService {
             for (String cveId : cveIdsToSend) {
                 cveStateService.markCveAsSeen(cveId);
             }
+
+            pastExecutionService.savePastExecution(cvesToSend, settings);
         } else {
             appLogger.info(LogEvents.BATCH_RUN, "Finished run without sending any alert", new LinkedHashMap<>(Map.of("vulnerabilities", cvesToSend.size())));
         }

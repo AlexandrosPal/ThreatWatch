@@ -1,5 +1,6 @@
 import { useState } from "react";
 import SettingsForm from "./components/SettingsForm";
+import PastExecutions from "./components/PastExecutions";
 import { scanNow } from "./services/api";
 import "./App.css";
 import logo from "./assets/logo.svg";
@@ -65,9 +66,20 @@ function App() {
           >
             Notifications
           </button>
+
+          <button
+            type="button"
+            className={`tab-button ${activeTab === "executions" ? "active" : ""}`}
+            onClick={() => setActiveTab("executions")}
+          >
+            Executions
+          </button>
         </nav>
 
         <SettingsForm activeTab={activeTab} />
+        {activeTab === "executions" && (
+          <PastExecutions />
+        )}
       </div>
     </div>
   );
