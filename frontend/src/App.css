@@ -635,3 +635,135 @@ input[type="number"] {
 .danger-button:hover:not(:disabled) {
   background: #fee2e2;
 }
+
+.execution-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.execution-card {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.execution-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.execution-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.execution-header p {
+  margin-top: 6px;
+  color: #667085;
+}
+
+.execution-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.severity-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  color: white;
+}
+
+.severity-pill.critical {
+  background: #b42318;
+}
+
+.severity-pill.high {
+  background: #d92d20;
+}
+
+.severity-pill.medium {
+  background: #f79009;
+}
+
+.severity-pill.low {
+  background: #12b76a;
+}
+
+.severity-pill.unknown {
+  background: #667085;
+}
+
+.execution-products {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.execution-product {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.execution-footer {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.execution-cves {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.execution-cve-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 16px;
+  background: #fcfcfd;
+}
+
+.execution-cve-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.execution-cve-top h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.execution-cve-top p {
+  margin-top: 4px;
+  color: #667085;
+  font-size: 0.9rem;
+}
+
+.execution-cve-description {
+  margin: 14px 0;
+  color: #344054;
+  line-height: 1.6;
+}
+
+.execution-cve-card a {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.execution-cve-card a:hover {
+  text-decoration: underline;
+}

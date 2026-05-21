@@ -2,7 +2,7 @@ package org.threatwatch.notifications.teams;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
-import org.threatwatch.cve.model.CveAlertItem;
+import org.threatwatch.cve.model.CveAlertItemRecord;
 import org.threatwatch.notifications.NotificationChannel;
 import org.threatwatch.notifications.NotificationRequestDto;
 import org.threatwatch.notifications.NotificationSender;
@@ -24,7 +24,7 @@ public class TeamsNotificationSender implements NotificationSender {
         return NotificationChannel.TEAMS;
     }
 
-    public String buildTeamsAlertMessage(List<CveAlertItem> cvesToSend) {
+    public String buildTeamsAlertMessage(List<CveAlertItemRecord> cvesToSend) {
         StringBuilder message = new StringBuilder();
 
         message.append(cvesToSend.size())

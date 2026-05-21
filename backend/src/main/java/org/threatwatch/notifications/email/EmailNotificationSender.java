@@ -11,7 +11,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
-import org.threatwatch.cve.model.CveAlertItem;
+import org.threatwatch.cve.model.CveAlertItemRecord;
 import org.threatwatch.loggers.AppLogger;
 import org.threatwatch.loggers.LogEvents;
 import org.threatwatch.notifications.NotificationChannel;
@@ -174,7 +174,7 @@ public class EmailNotificationSender implements NotificationSender {
         dynamicMailSender.send(message);
     }
 
-    public String buildEmailAlertHtml(List<CveAlertItem> cvesToSend) {
+    public String buildEmailAlertHtml(List<CveAlertItemRecord> cvesToSend) {
 
         if (cvesToSend.size() > 10) {
             return buildEmailSummaryHtml(cvesToSend);
@@ -183,11 +183,11 @@ public class EmailNotificationSender implements NotificationSender {
         return buildEmailDetailedHtml(cvesToSend);
     }
 
-    private String buildEmailDetailedHtml(List<CveAlertItem> cvesToSend) {
+    private String buildEmailDetailedHtml(List<CveAlertItemRecord> cvesToSend) {
 
         StringBuilder html = new StringBuilder();
 
-        for (CveAlertItem cve : cvesToSend) {
+        for (CveAlertItemRecord cve : cvesToSend) {
             html.append(buildCveHtml(cve.getProduct(), cve));
         }
 
@@ -208,7 +208,7 @@ public class EmailNotificationSender implements NotificationSender {
         };
     }
 
-    private int severityPriority(CveAlertItem cve) {
+    private int severityPriority(CveAlertItemRecord cve) {
 
         if (cve.getSeverity() == null) {
             return 0;
@@ -224,7 +224,7 @@ public class EmailNotificationSender implements NotificationSender {
         };
     }
 
-    private String buildEmailSummaryHtml(List<CveAlertItem> cvesToSend) {
+    private String buildEmailSummaryHtml(List<CveAlertItemRecord> cvesToSend) {
 
         double threshold = Double.parseDouble(settingsService
                 .retrieveSettings()
@@ -232,7 +232,7 @@ public class EmailNotificationSender implements NotificationSender {
 
         Map<String, Long> cvesByProduct = cvesToSend.stream()
                 .collect(Collectors.groupingBy(
-                        CveAlertItem::getProduct,
+                        CveAlertItemRecord::getProduct,
                         LinkedHashMap::new,
                         Collectors.counting()
                 ));
@@ -260,7 +260,7 @@ public class EmailNotificationSender implements NotificationSender {
                 .max(Map.Entry.comparingByValue())
                 .orElse(null);
 
-        List<CveAlertItem> topFindings = cvesToSend.stream()
+        List<CveAlertItemRecord> topFindings = cvesToSend.stream()
                 .sorted(
                         Comparator
                                 .comparing(
@@ -268,7 +268,7 @@ public class EmailNotificationSender implements NotificationSender {
                                         Comparator.reverseOrder()
                                 )
                                 .thenComparing(
-                                        CveAlertItem::getScore,
+                                        CveAlertItemRecord::getScore,
                                         Comparator.nullsLast(
                                                 Comparator.reverseOrder()
                                         )
@@ -446,7 +446,7 @@ public class EmailNotificationSender implements NotificationSender {
                 .append("🚨 Highest severity findings")
                 .append("</div>");
 
-        for (CveAlertItem cve : topFindings) {
+        for (CveAlertItemRecord cve : topFindings) {
             html.append(buildCveHtml(cve.getProduct(), cve));
         }
 
@@ -512,7 +512,7 @@ public class EmailNotificationSender implements NotificationSender {
     }
 
     private long countSeverity(
-            List<CveAlertItem> cves,
+            List<CveAlertItemRecord> cves,
             String severity
     ) {
 
@@ -532,7 +532,7 @@ public class EmailNotificationSender implements NotificationSender {
 
     public String buildCveHtml(
             String product,
-            CveAlertItem cve
+            CveAlertItemRecord cve
     ) {
 
         String severity = cve.getSeverity() == null

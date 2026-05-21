@@ -32,9 +32,9 @@ public class SettingsServiceImpl implements SettingsService {
     private static final String SETTINGS_EMAIL_PROVIDER_USERNAME_KEY = "settings:emailProviderUsername";
     private static final String SETTINGS_EMAIL_PROVIDER_PASSWORD_KEY = "settings:emailProviderPassword";
     private static final String SETTINGS_NVD_API_KEY_KEY = "settings:nvdApiKey";
-    private static final String SETTINGS_DISCORD_WEBHOOK_URL = "settings:discordWebhookUrls";
-    private static final String SETTINGS_SLACK_WEBHOOK_URL = "settings:slackWebhookUrls";
-    private static final String SETTINGS_TEAMS_WEBHOOK_URL = "settings:teamsWebhookUrls";
+    private static final String SETTINGS_DISCORD_WEBHOOK_URL_KEY = "settings:discordWebhookUrls";
+    private static final String SETTINGS_SLACK_WEBHOOK_URL_KEY = "settings:slackWebhookUrls";
+    private static final String SETTINGS_TEAMS_WEBHOOK_URL_KEY = "settings:teamsWebhookUrls";
 
     public SettingsServiceImpl(StringRedisTemplate redisTemplate, ProductsService productsService) {
         this.redisTemplate = redisTemplate;
@@ -176,10 +176,10 @@ public class SettingsServiceImpl implements SettingsService {
         if (discordWebhookUrl != null) {
             Boolean isMember = redisTemplate.opsForSet().isMember(SETTINGS_PRODUCTS_SELECTED_KEY, discordWebhookUrl);
             if (Boolean.TRUE.equals(isMember)) {
-                redisTemplate.opsForSet().remove(SETTINGS_DISCORD_WEBHOOK_URL, discordWebhookUrl);
+                redisTemplate.opsForSet().remove(SETTINGS_DISCORD_WEBHOOK_URL_KEY, discordWebhookUrl);
                 appLogger.info(LogEvents.SETTINGS_UPDATE, "Removed Discord webhook URL from list", new LinkedHashMap<>(Map.of("discordWebhookUrl", discordWebhookUrl)));
             } else {
-                redisTemplate.opsForSet().add(SETTINGS_DISCORD_WEBHOOK_URL, discordWebhookUrl);
+                redisTemplate.opsForSet().add(SETTINGS_DISCORD_WEBHOOK_URL_KEY, discordWebhookUrl);
                 appLogger.info(LogEvents.SETTINGS_UPDATE, "Added Discord webhook URL to list", new LinkedHashMap<>(Map.of("discordWebhookUrl", discordWebhookUrl)));
             }
         }
@@ -189,10 +189,10 @@ public class SettingsServiceImpl implements SettingsService {
         if (slackWebhookUrl != null) {
             Boolean isMember = redisTemplate.opsForSet().isMember(SETTINGS_PRODUCTS_SELECTED_KEY, slackWebhookUrl);
             if (Boolean.TRUE.equals(isMember)) {
-                redisTemplate.opsForSet().remove(SETTINGS_SLACK_WEBHOOK_URL, slackWebhookUrl);
+                redisTemplate.opsForSet().remove(SETTINGS_SLACK_WEBHOOK_URL_KEY, slackWebhookUrl);
                 appLogger.info(LogEvents.SETTINGS_UPDATE, "Removed Slack webhook URL from list", new LinkedHashMap<>(Map.of("slackWebhookUrl", slackWebhookUrl)));
             } else {
-                redisTemplate.opsForSet().add(SETTINGS_SLACK_WEBHOOK_URL, slackWebhookUrl);
+                redisTemplate.opsForSet().add(SETTINGS_SLACK_WEBHOOK_URL_KEY, slackWebhookUrl);
                 appLogger.info(LogEvents.SETTINGS_UPDATE, "Added Slack webhook URL to list", new LinkedHashMap<>(Map.of("slackWebhookUrl", slackWebhookUrl)));
             }
         }
@@ -202,10 +202,10 @@ public class SettingsServiceImpl implements SettingsService {
         if (teamsWebhookUrl != null) {
             Boolean isMember = redisTemplate.opsForSet().isMember(SETTINGS_PRODUCTS_SELECTED_KEY, teamsWebhookUrl);
             if (Boolean.TRUE.equals(isMember)) {
-                redisTemplate.opsForSet().remove(SETTINGS_TEAMS_WEBHOOK_URL, teamsWebhookUrl);
+                redisTemplate.opsForSet().remove(SETTINGS_TEAMS_WEBHOOK_URL_KEY, teamsWebhookUrl);
                 appLogger.info(LogEvents.SETTINGS_UPDATE, "Removed MS Teams webhook URL from list", new LinkedHashMap<>(Map.of("teamsWebhookUrl", teamsWebhookUrl)));
             } else {
-                redisTemplate.opsForSet().add(SETTINGS_TEAMS_WEBHOOK_URL, teamsWebhookUrl);
+                redisTemplate.opsForSet().add(SETTINGS_TEAMS_WEBHOOK_URL_KEY, teamsWebhookUrl);
                 appLogger.info(LogEvents.SETTINGS_UPDATE, "Added MS Teams webhook URL to list", new LinkedHashMap<>(Map.of("teamsWebhookUrl", teamsWebhookUrl)));
             }
         }
@@ -255,9 +255,9 @@ public class SettingsServiceImpl implements SettingsService {
             nvdApiKeyProvided = "false";
         }
 
-        Set<String> discordWebhookUrls = redisTemplate.opsForSet().members(SETTINGS_DISCORD_WEBHOOK_URL);
-        Set<String> slackWebhookUrls = redisTemplate.opsForSet().members(SETTINGS_SLACK_WEBHOOK_URL);
-        Set<String> teamsWebhookUrls = redisTemplate.opsForSet().members(SETTINGS_TEAMS_WEBHOOK_URL);
+        Set<String> discordWebhookUrls = redisTemplate.opsForSet().members(SETTINGS_DISCORD_WEBHOOK_URL_KEY);
+        Set<String> slackWebhookUrls = redisTemplate.opsForSet().members(SETTINGS_SLACK_WEBHOOK_URL_KEY);
+        Set<String> teamsWebhookUrls = redisTemplate.opsForSet().members(SETTINGS_TEAMS_WEBHOOK_URL_KEY);
 
         return SettingsResponseDto.builder()
                 .batchInterval(batchInterval)

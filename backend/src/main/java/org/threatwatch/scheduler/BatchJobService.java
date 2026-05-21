@@ -4,6 +4,7 @@ import jakarta.mail.MessagingException;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.threatwatch.executions.PastExecutionService;
 import org.threatwatch.notifications.NotificationRequestDto;
 import org.threatwatch.cve.parsing.CveParserService;
 import org.threatwatch.cve.state.CveStateService;
@@ -13,7 +14,7 @@ import org.threatwatch.notifications.teams.TeamsNotificationSender;
 import org.threatwatch.settings.SettingsResponseDto;
 import org.threatwatch.loggers.AppLogger;
 import org.threatwatch.loggers.LogEvents;
-import org.threatwatch.cve.model.CveAlertItem;
+import org.threatwatch.cve.model.CveAlertItemRecord;
 import org.threatwatch.notifications.NotificationChannel;
 import org.threatwatch.cve.parsing.ParsedCveModel;
 import org.threatwatch.notifications.discord.DiscordNotificationSender;
@@ -41,6 +42,7 @@ public class BatchJobService {
     private final NvdRestService nvdRestService;
     private final CveParserService cveParserService;
     private final CveStateService cveStateService;
+    private final PastExecutionService pastExecutionService;
 
     private static final AppLogger appLogger = new AppLogger(LoggerFactory.getLogger(BatchJobService.class));
 
@@ -50,7 +52,7 @@ public class BatchJobService {
     @Value("${backend.nvd.requests.interval}")
     private int nvdReqeustsInterval;
 
-    public BatchJobService(List<NotificationSender> senderList, EmailNotificationSender emailNotificationSender, DiscordNotificationSender discordNotificationSender, SlackNotificationSender slackNotificationSender, TeamsNotificationSender teamsNotificationSender, SettingsService settingsService, NvdRestService nvdRestService, CveParserService cveParserService, CveStateService cveStateService) {
+    public BatchJobService(List<NotificationSender> senderList, EmailNotificationSender emailNotificationSender, DiscordNotificationSender discordNotificationSender, SlackNotificationSender slackNotificationSender, TeamsNotificationSender teamsNotificationSender, SettingsService settingsService, NvdRestService nvdRestService, CveParserService cveParserService, CveStateService cveStateService, PastExecutionService pastExecutionService) {
         this.senders = senderList.stream()
                 .collect(Collectors.toMap(NotificationSender::supports, s -> s));
         this.emailNotificationSender = emailNotificationSender;
@@ -61,6 +63,7 @@ public class BatchJobService {
         this.nvdRestService = nvdRestService;
         this.cveParserService = cveParserService;
         this.cveStateService = cveStateService;
+        this.pastExecutionService = pastExecutionService;
     }
 
     private boolean descriptionMatchesProduct(String description, String product) {
@@ -98,7 +101,7 @@ public class BatchJobService {
         String html = emailNotificationSender.loadHtmlTemplate();
         Set<String> emails = settings.getEmails();
         Set<String> cveIdsToSend = new HashSet<>();
-        List<CveAlertItem> cvesToSend = new ArrayList<>();
+        List<CveAlertItemRecord> cvesToSend = new ArrayList<>();
 
         for (String product : products) {
             Thread.sleep(nvdReqeustsInterval);
@@ -127,7 +130,7 @@ public class BatchJobService {
 
                 validCveCounter += 1;
                 cveIdsToSend.add(cveId);
-                cvesToSend.add(new CveAlertItem(
+                cvesToSend.add(new CveAlertItemRecord(
                         product,
                         parsedCve.getCveId(),
                         parsedCve.getDescription(),
@@ -141,7 +144,7 @@ public class BatchJobService {
 
         cvesToSend.sort(
                 Comparator.comparing(
-                        CveAlertItem::getScore,
+                        CveAlertItemRecord::getScore,
                         Comparator.nullsLast(Comparator.reverseOrder())
                 )
         );
@@ -190,6 +193,8 @@ public class BatchJobService {
             for (String cveId : cveIdsToSend) {
                 cveStateService.markCveAsSeen(cveId);
             }
+
+            pastExecutionService.savePastExecution(cvesToSend, settings);
         } else {
             appLogger.info(LogEvents.BATCH_RUN, "Finished run without sending any alert", new LinkedHashMap<>(Map.of("vulnerabilities", cvesToSend.size())));
         }
