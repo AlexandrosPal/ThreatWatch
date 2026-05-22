@@ -194,10 +194,9 @@ public class BatchJobService {
                 cveStateService.markCveAsSeen(cveId);
             }
 
-            pastExecutionService.savePastExecution(cvesToSend, settings);
         } else {
             appLogger.info(LogEvents.BATCH_RUN, "Finished run without sending any alert", new LinkedHashMap<>(Map.of("vulnerabilities", cvesToSend.size())));
         }
-
+        pastExecutionService.savePastExecution(cvesToSend, settings);
     }
 }

@@ -42,7 +42,7 @@ ThreatWatch consists of three main components:
 
 ```bash
 git clone https://github.com/AlexandrosPal/ThreatWatch.git
-cd infra/
+cd ThreatWatch/
 docker compose up --build
 ```
 
