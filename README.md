@@ -14,12 +14,13 @@ It delivers alerts from through multiple channels, like email, Discord, or Slack
 - Deduplication
 - Self-hosted with Docker Compose
 - Lightweight and AI-free by default
+- Past executions history
 
 ## Architecture Overview
 ThreatWatch consists of three main components:
 - **Frontend**: React-based UI for configuring monitoring settings.
 - **Backend**: Spring Boot API responsible for scheduling, CVE retrieval, filtering, deduplication, and notifications.
-- **Redis**: Stores user settings and CVE state.
+- **Redis**: Stores user settings, CVE states and past executions.
 
 ## Getting Started
 
