@@ -11,12 +11,14 @@ public class PastExecutionResponseDto {
     private final String timestamp;
     private final List<CveAlertItem> cves;
     private final HashMap<String, HashMap> notificationsSent;
+    private final PastExecutionStatus status;
 
-    public PastExecutionResponseDto(Integer totalCves, String timestamp, List<CveAlertItem> cves, HashMap<String, HashMap> notificationsSent) {
+    public PastExecutionResponseDto(Integer totalCves, String timestamp, List<CveAlertItem> cves, HashMap<String, HashMap> notificationsSent, PastExecutionStatus status) {
         this.totalCves = totalCves;
         this.timestamp = timestamp;
         this.cves = cves;
         this.notificationsSent = notificationsSent;
+        this.status = status;
     }
 
     public Integer getTotalCves() { return totalCves; }
@@ -27,4 +29,5 @@ public class PastExecutionResponseDto {
 
     public HashMap<String, HashMap> getNotificationsSent() { return notificationsSent; }
 
+    public PastExecutionStatus getStatus() { return status; }
 }

@@ -12,6 +12,7 @@ public class LogEvents {
     public static final String NVD_REST_CLIENT = "nvd_rest_client";
     public static final String FILE_READ_ERROR = "file_read_error";
     public static final String EMAIL_CONNECTION = "email_connection";
+    public static final String BATCH_ERROR = "batch_error";
 
     private LogEvents() {}
 

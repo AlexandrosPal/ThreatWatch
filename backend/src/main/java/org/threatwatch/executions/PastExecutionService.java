@@ -29,7 +29,7 @@ public class PastExecutionService {
         this.objectMapper = objectMapper;
     }
 
-    public void savePastExecution(List<CveAlertItem> cvesToSend, SettingsResponseDto settings) {
+    public void savePastExecution(List<CveAlertItem> cvesToSend, SettingsResponseDto settings, PastExecutionStatus status) {
         String timestamp = String.valueOf(Instant.now());
         String pastExecutionRedisKey = PAST_EXECUTION_TEMPLATE_KEY + timestamp;
         Set<NotificationChannel> notificationsSelected = settings.getNotificationsSelected().stream()
@@ -74,7 +74,8 @@ public class PastExecutionService {
                 cvesToSend.size(),
                 timestamp,
                 cvesToSend,
-                notificationsSent
+                notificationsSent,
+                status
         );
 
         String pastExecutionString = objectMapper.writeValueAsString(pastExecution);

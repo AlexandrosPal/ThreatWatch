@@ -134,6 +134,13 @@ function PastExecutions() {
           const isExpanded =
             expandedExecution === index;
 
+          const executionStatus = execution.status || "FINISHED";
+          const statusIcons = {
+            FINISHED: "✓",
+            ERROR: "✖",
+            RUNNING: "⟳"
+          };
+
           return (
 
             <div
@@ -142,20 +149,22 @@ function PastExecutions() {
             >
 
               <div className="execution-header">
-
-                <div>
-
-                  <h2>
-                    {execution.totalCves} vulnerabilities detected
-                  </h2>
-
-                  <p>
-                    {new Date(execution.timestamp)
-                      .toLocaleString()}
-                  </p>
-
+                <div className="execution-card-header">
+                  <div>
+                    <h2>
+                      {execution.totalCves} vulnerabilities detected
+                    </h2>
+                    <p>
+                      {new Date(execution.timestamp)
+                        .toLocaleString()}
+                    </p>
+                  </div>
+                  <div
+                    className={`execution-status ${executionStatus.toLowerCase()}`}
+                  >
+                    {statusIcons[executionStatus]} {executionStatus}
+                  </div>
                 </div>
-
               </div>
 
               <div className="execution-badges">

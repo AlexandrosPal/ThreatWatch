@@ -11,12 +11,14 @@ public class PastExecutionRecord {
     private final String timestamp;
     private final List<CveAlertItem> cves;
     private final HashMap<String, Object> notificationsSent;
+    private final PastExecutionStatus status;
 
-    public PastExecutionRecord(Integer totalCves, String timestamp, List<CveAlertItem> cves, HashMap<String, Object> notificationsSent) {
+    public PastExecutionRecord(Integer totalCves, String timestamp, List<CveAlertItem> cves, HashMap<String, Object> notificationsSent, PastExecutionStatus status) {
         this.totalCves = totalCves;
         this.timestamp = timestamp;
         this.cves = cves;
         this.notificationsSent = notificationsSent;
+        this.status = status;
     }
 
     public Integer getTotalCves() { return totalCves; }
@@ -27,4 +29,5 @@ public class PastExecutionRecord {
 
     public HashMap<String, Object> getNotificationsSent() { return notificationsSent; }
 
+    public PastExecutionStatus getStatus() { return status; }
 }
