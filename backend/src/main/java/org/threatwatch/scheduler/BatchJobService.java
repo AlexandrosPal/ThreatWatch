@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.threatwatch.executions.PastExecutionService;
+import org.threatwatch.executions.PastExecutionStatus;
 import org.threatwatch.notifications.NotificationRequestDto;
 import org.threatwatch.cve.parsing.CveParserService;
 import org.threatwatch.cve.state.CveStateService;
@@ -151,52 +152,58 @@ public class BatchJobService {
 
         String cveListHtml = emailNotificationSender.buildEmailAlertHtml(cvesToSend);
 
+        PastExecutionStatus status = PastExecutionStatus.RUNNING;
+
         if (!cveIdsToSend.isEmpty()) {
             html = html.replace("{{cveList}}", cveListHtml);
 
-            for (NotificationChannel channel : notificationsSelected) {
-                NotificationRequestDto request = new NotificationRequestDto();
+            try {
+                for (NotificationChannel channel : notificationsSelected) {
+                    NotificationRequestDto request = new NotificationRequestDto();
 
-                switch (channel) {
-                    case EMAIL:
-                        request.setEmails(emails);
-                        request.setTitle("New Vulnerabilities Report");
-                        request.setMessage(html);
+                    switch (channel) {
+                        case EMAIL:
+                            request.setEmails(emails);
+                            request.setTitle("New Vulnerabilities Report");
+                            request.setMessage(html);
 
-                        appLogger.info(LogEvents.EMAIL_SENT, "Finished run and sent alert email", new LinkedHashMap<>(Map.of("vulnerabilities", cvesToSend.size())));
-                        break;
-                    case DISCORD:
-                        request.setWebhookUrls(settings.getDiscordWebhookUrls());
-                        request.setMessage(discordNotificationSender.buildDiscordAlertMessage(cvesToSend));
+                            appLogger.info(LogEvents.EMAIL_SENT, "Finished run and sent alert email", new LinkedHashMap<>(Map.of("vulnerabilities", cvesToSend.size())));
+                            break;
+                        case DISCORD:
+                            request.setWebhookUrls(settings.getDiscordWebhookUrls());
+                            request.setMessage(discordNotificationSender.buildDiscordAlertMessage(cvesToSend));
 
-                        appLogger.info(LogEvents.DISCORD_MESSAGE_SENT, "Finished run and sent alert Discord message", new LinkedHashMap<>(Map.of("vulnerabilities", cvesToSend.size())));
-                        break;
+                            appLogger.info(LogEvents.DISCORD_MESSAGE_SENT, "Finished run and sent alert Discord message", new LinkedHashMap<>(Map.of("vulnerabilities", cvesToSend.size())));
+                            break;
 
-                    case SLACK:
-                        request.setWebhookUrls(settings.getSlackWebhookUrls());
-                        request.setMessage(slackNotificationSender.buildSlackAlertMessage(cvesToSend));
+                        case SLACK:
+                            request.setWebhookUrls(settings.getSlackWebhookUrls());
+                            request.setMessage(slackNotificationSender.buildSlackAlertMessage(cvesToSend));
 
-                        appLogger.info(LogEvents.SLACK_MESSAGE_SENT, "Finished run and sent alert Slack message", new LinkedHashMap<>(Map.of("vulnerabilities", cvesToSend.size())));
-                        break;
+                            appLogger.info(LogEvents.SLACK_MESSAGE_SENT, "Finished run and sent alert Slack message", new LinkedHashMap<>(Map.of("vulnerabilities", cvesToSend.size())));
+                            break;
 
-                    case TEAMS:
-                        request.setWebhookUrls(settings.getTeamsWebhookUrls());
-                        request.setMessage(teamsNotificationSender.buildTeamsAlertMessage(cvesToSend));
+                        case TEAMS:
+                            request.setWebhookUrls(settings.getTeamsWebhookUrls());
+                            request.setMessage(teamsNotificationSender.buildTeamsAlertMessage(cvesToSend));
 
-                        appLogger.info(LogEvents.TEAMS_MESSAGE_SENT, "Finished run and sent alert Teams message", new LinkedHashMap<>(Map.of("vulnerabilities", cvesToSend.size())));
-                        break;
+                            appLogger.info(LogEvents.TEAMS_MESSAGE_SENT, "Finished run and sent alert Teams message", new LinkedHashMap<>(Map.of("vulnerabilities", cvesToSend.size())));
+                            break;
+                    }
+                    senders.get(channel).sendNotification(request);
                 }
 
-                senders.get(channel).sendNotification(request);
+                for (String cveId : cveIdsToSend) {
+                    cveStateService.markCveAsSeen(cveId);
+                }
+                status = PastExecutionStatus.FINISHED;
+            } catch (Exception e) {
+                status = PastExecutionStatus.ERROR;
+                appLogger.info(LogEvents.BATCH_ERROR, "Batch run exited with error: " + e, new LinkedHashMap<>(Map.of("vulnerabilities", cvesToSend.size())));
             }
-
-            for (String cveId : cveIdsToSend) {
-                cveStateService.markCveAsSeen(cveId);
-            }
-
         } else {
             appLogger.info(LogEvents.BATCH_RUN, "Finished run without sending any alert", new LinkedHashMap<>(Map.of("vulnerabilities", cvesToSend.size())));
         }
-        pastExecutionService.savePastExecution(cvesToSend, settings);
+        pastExecutionService.savePastExecution(cvesToSend, settings, status);
     }
 }
