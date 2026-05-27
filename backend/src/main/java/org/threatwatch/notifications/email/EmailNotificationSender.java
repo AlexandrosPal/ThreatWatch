@@ -559,7 +559,7 @@ public class EmailNotificationSender implements NotificationSender {
                 "padding:12px;margin-bottom:8px;" +
                 "border-radius:12px;\">"
 
-                + "<div style=\"font-weight:bold;\">"
+                + "<div style=\"font-weight:bold;display:block;\">"
                 + product
                 + " | "
                 + cve.getId()
