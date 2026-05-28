@@ -202,6 +202,7 @@ public class BatchJobService {
                 appLogger.info(LogEvents.BATCH_ERROR, "Batch run exited with error: " + e, new LinkedHashMap<>(Map.of("vulnerabilities", cvesToSend.size())));
             }
         } else {
+            status = PastExecutionStatus.FINISHED;
             appLogger.info(LogEvents.BATCH_RUN, "Finished run without sending any alert", new LinkedHashMap<>(Map.of("vulnerabilities", cvesToSend.size())));
         }
         pastExecutionService.savePastExecution(cvesToSend, settings, status);
