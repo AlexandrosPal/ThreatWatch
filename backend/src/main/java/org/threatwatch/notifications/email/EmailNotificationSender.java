@@ -197,13 +197,11 @@ public class EmailNotificationSender implements NotificationSender {
     private boolean severityAllowedByThreshold(String severity, double threshold) {
 
         return switch (severity) {
-
             case "CRITICAL" -> threshold <= 9.0;
             case "HIGH" -> threshold <= 7.0;
             case "MEDIUM" -> threshold <= 4.0;
             case "LOW" -> threshold <= 0.1;
             case "UNKNOWN" -> Boolean.parseBoolean(settingsService.retrieveSettings().getEarlyAlerts());
-
             default -> false;
         };
     }
@@ -215,7 +213,6 @@ public class EmailNotificationSender implements NotificationSender {
         }
 
         return switch (cve.getSeverity()) {
-
             case CRITICAL -> 5;
             case HIGH -> 4;
             case MEDIUM -> 3;
@@ -226,9 +223,7 @@ public class EmailNotificationSender implements NotificationSender {
 
     private String buildEmailSummaryHtml(List<CveAlertItem> cvesToSend) {
 
-        double threshold = Double.parseDouble(settingsService
-                .retrieveSettings()
-                .getSeverityThreshold());
+        double threshold = Double.parseDouble(settingsService.retrieveSettings().getSeverityThreshold());
 
         Map<String, Long> cvesByProduct = cvesToSend.stream()
                 .collect(Collectors.groupingBy(
@@ -238,7 +233,6 @@ public class EmailNotificationSender implements NotificationSender {
                 ));
 
         Map<String, Long> severityCounts = new LinkedHashMap<>();
-
         severityCounts.put("CRITICAL", countSeverity(cvesToSend, "CRITICAL"));
         severityCounts.put("HIGH", countSeverity(cvesToSend, "HIGH"));
         severityCounts.put("MEDIUM", countSeverity(cvesToSend, "MEDIUM"));
@@ -278,32 +272,28 @@ public class EmailNotificationSender implements NotificationSender {
                 .toList();
 
         StringBuilder html = new StringBuilder();
-
         html.append(
                 "<div style=\"border:1px solid #e5e7eb;" +
                         "border-radius:14px;background:#ffffff;" +
                         "overflow:hidden;\">"
         );
-
         html.append(
-                        "<div style=\"padding:18px 20px;" +
-                                "background:#111827;color:white;\">"
-                )
-
-                .append(
-                        "<div style=\"font-size:13px;" +
-                                "color:#cbd5e1;margin-bottom:4px;\">"
-                )
-                .append("🚨 ThreatWatch Security Report")
-                .append("</div>")
-
-                .append(
-                        "<div style=\"font-size:20px;" +
-                                "font-weight:800;line-height:1.25;\">"
-                )
-                .append(cvesToSend.size())
-                .append(" vulnerabilities affecting your monitored stack")
-                .append("</div>");
+                "<div style=\"padding:18px 20px;" +
+                        "background:#111827;color:white;\">"
+        )
+            .append(
+                    "<div style=\"font-size:13px;" +
+                            "color:#cbd5e1;margin-bottom:4px;\">"
+            )
+            .append("🚨 ThreatWatch Security Report")
+            .append("</div>")
+            .append(
+                    "<div style=\"font-size:20px;" +
+                            "font-weight:800;line-height:1.25;\">"
+            )
+            .append(cvesToSend.size())
+            .append(" vulnerabilities affecting your monitored stack")
+            .append("</div>");
 
         if (topProduct != null) {
 
@@ -335,9 +325,7 @@ public class EmailNotificationSender implements NotificationSender {
         for (int i = 0; i < activeSeverities.size(); i += 2) {
 
             html.append("<tr>");
-
             Map.Entry<String, Long> left = activeSeverities.get(i);
-
             html.append(buildSeverityBoxTd(
                     left.getKey(),
                     left.getValue(),
@@ -345,26 +333,19 @@ public class EmailNotificationSender implements NotificationSender {
             ));
 
             if (i + 1 < activeSeverities.size()) {
-
                 Map.Entry<String, Long> right =
                         activeSeverities.get(i + 1);
-
                 html.append(buildSeverityBoxTd(
                         right.getKey(),
                         right.getValue(),
                         severityColor(right.getKey())
                 ));
-
             } else {
-
                 html.append("<td></td>");
             }
-
             html.append("</tr>");
         }
-
         html.append("</table>");
-
         html.append(
                         "<div style=\"font-size:15px;" +
                                 "font-weight:800;color:#111827;" +
@@ -372,41 +353,33 @@ public class EmailNotificationSender implements NotificationSender {
                 )
                 .append("Affected monitored products")
                 .append("</div>");
-
         html.append(
                         "<table style=\"width:100%;" +
                                 "border-collapse:collapse;font-size:14px;\">"
-
                 )
-
                 .append("<thead>")
                 .append("<tr>")
-
                 .append(
-                        "<th style=\"text-align:left;" +
-                                "padding:10px 0;" +
-                                "border-bottom:1px solid #e5e7eb;" +
-                                "color:#6b7280;font-size:12px;" +
-                                "text-transform:uppercase;\">"
+                    "<th style=\"text-align:left;" +
+                            "padding:10px 0;" +
+                            "border-bottom:1px solid #e5e7eb;" +
+                            "color:#6b7280;font-size:12px;" +
+                            "text-transform:uppercase;\">"
                 )
                 .append("Product")
                 .append("</th>")
-
                 .append(
-                        "<th style=\"text-align:right;" +
-                                "padding:10px 0;" +
-                                "border-bottom:1px solid #e5e7eb;" +
-                                "color:#6b7280;font-size:12px;" +
-                                "text-transform:uppercase;\">"
+                    "<th style=\"text-align:right;" +
+                            "padding:10px 0;" +
+                            "border-bottom:1px solid #e5e7eb;" +
+                            "color:#6b7280;font-size:12px;" +
+                            "text-transform:uppercase;\">"
                 )
                 .append("CVEs")
                 .append("</th>")
-
                 .append("</tr>")
                 .append("</thead>")
-
                 .append("<tbody>");
-
         cvesByProduct.entrySet()
                 .stream()
                 .sorted(
@@ -414,15 +387,13 @@ public class EmailNotificationSender implements NotificationSender {
                                 .reversed()
                 )
                 .forEach(entry -> html.append("<tr>")
-
                         .append(
-                                "<td style=\"padding:11px 0;" +
-                                        "border-bottom:1px solid #f3f4f6;" +
-                                        "color:#111827;font-weight:700;\">"
+                            "<td style=\"padding:11px 0;" +
+                                    "border-bottom:1px solid #f3f4f6;" +
+                                    "color:#111827;font-weight:700;\">"
                         )
                         .append(entry.getKey())
                         .append("</td>")
-
                         .append(
                                 "<td style=\"padding:11px 0;" +
                                         "border-bottom:1px solid #f3f4f6;" +
@@ -431,41 +402,35 @@ public class EmailNotificationSender implements NotificationSender {
                         )
                         .append(entry.getValue())
                         .append("</td>")
-
                         .append("</tr>"));
-
         html.append("</tbody></table>");
-
         html.append("<div style=\"margin-top:22px;\">")
-
-                .append(
-                        "<div style=\"font-size:15px;" +
-                                "font-weight:800;color:#111827;" +
-                                "margin-bottom:12px;\">"
-                )
-                .append("🚨 Highest severity findings")
-                .append("</div>");
+            .append(
+                    "<div style=\"font-size:15px;" +
+                            "font-weight:800;color:#111827;" +
+                            "margin-bottom:12px;\">"
+            )
+            .append("🚨 Highest severity findings")
+            .append("</div>");
 
         for (CveAlertItem cve : topFindings) {
             html.append(buildCveHtml(cve.getProduct(), cve));
         }
 
         html.append("</div>");
-
         html.append(
-                        "<div style=\"margin-top:16px;" +
-                                "padding:12px 14px;" +
-                                "border-radius:10px;" +
-                                "background:#f9fafb;" +
-                                "color:#6b7280;" +
-                                "font-size:13px;" +
-                                "line-height:1.45;\">"
-                )
-                .append(
-                        "This is a summary report, please consult \"Executions\" tab in main app page to view the full list in detail."
-                )
-                .append("</div>");
-
+                "<div style=\"margin-top:16px;" +
+                        "padding:12px 14px;" +
+                        "border-radius:10px;" +
+                        "background:#f9fafb;" +
+                        "color:#6b7280;" +
+                        "font-size:13px;" +
+                        "line-height:1.45;\">"
+        )
+            .append(
+                    "This is a summary report, please consult \"Executions\" tab in main app page to view the full list in detail."
+            )
+            .append("</div>");
         html.append("</div></div>");
 
         return html.toString();
@@ -474,12 +439,10 @@ public class EmailNotificationSender implements NotificationSender {
     private String severityColor(String severity) {
 
         return switch (severity) {
-
             case "CRITICAL" -> "#b42318";
             case "HIGH" -> "#d92d20";
             case "MEDIUM" -> "#f79009";
             case "LOW" -> "#12b76a";
-
             default -> "#667085";
         };
     }
@@ -493,20 +456,15 @@ public class EmailNotificationSender implements NotificationSender {
         return "<td style=\"border:1px solid #e5e7eb;" +
                 "border-radius:12px;padding:12px;" +
                 "background:#ffffff;width:50%;\">"
-
                 + "<div style=\"font-size:11px;" +
                 "text-transform:uppercase;color:#6b7280;" +
                 "font-weight:800;margin-bottom:6px;\">"
-
                 + label
                 + "</div>"
-
                 + "<div style=\"font-size:26px;" +
                 "font-weight:900;color:" + color + ";\">"
-
                 + count
                 + "</div>"
-
                 + "</td>";
     }
 
@@ -517,11 +475,9 @@ public class EmailNotificationSender implements NotificationSender {
 
         return cves.stream()
                 .filter(cve -> {
-
                     if (cve.getSeverity() == null) {
                         return "UNKNOWN".equals(severity);
                     }
-
                     return cve.getSeverity()
                             .name()
                             .equals(severity);
@@ -529,15 +485,10 @@ public class EmailNotificationSender implements NotificationSender {
                 .count();
     }
 
-    public String buildCveHtml(
-            String product,
-            CveAlertItem cve
-    ) {
-
+    public String buildCveHtml(String product, CveAlertItem cve) {
         String severity = cve.getSeverity() == null
                 ? "UNKNOWN"
                 : cve.getSeverity().name();
-
         String color = severityColor(severity);
 
         String desc = cve.getDescription().length()
@@ -548,9 +499,7 @@ public class EmailNotificationSender implements NotificationSender {
 
                 : cve.getDescription();
 
-        String score = "-1.0".equals(
-                String.valueOf(cve.getScore())
-        )
+        String score = "-1.0".equals(String.valueOf(cve.getScore()))
                 ? ""
                 : String.valueOf(cve.getScore());
 
@@ -558,49 +507,37 @@ public class EmailNotificationSender implements NotificationSender {
                 "style=\"border:1px solid #e5e7eb;" +
                 "padding:12px;margin-bottom:8px;" +
                 "border-radius:12px;\">"
-
                 + "<div style=\"font-weight:bold;display:block;\">"
                 + product
                 + " | "
                 + cve.getId()
                 + "</div>"
-
                 + "<div style=\"font-size:12px;color:#6b7280;\">"
                 + cve.getPublished()
                 + "</div>"
-
                 + "<div style=\"margin-top:6px;\">"
-
                 + "<span class=\"badge\" style=\"background:"
                 + color
                 + ";color:white;padding:3px 6px;" +
                 "font-size:11px;border-radius:999px;\">"
-
                 + severity
                 + "</span>"
-
                 + (score.isEmpty()
                 ? ""
                 : "<span style=\"margin-left:6px;\">"
                   + score
                   + "</span>")
-
                 + "</div>"
-
                 + "<div style=\"margin-top:8px;" +
                 "font-size:13px;line-height:1.5;\">"
-
                 + desc
                 + "</div>"
-
                 + "<a href=\"https://nvd.nist.gov/vuln/detail/"
                 + cve.getId()
                 + "\" style=\"color:#2563eb;" +
                 "font-size:12px;text-decoration:none;\">"
-
                 + "View →"
                 + "</a>"
-
                 + "</div>";
     }
 
