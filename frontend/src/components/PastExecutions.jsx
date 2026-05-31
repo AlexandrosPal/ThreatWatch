@@ -266,7 +266,7 @@ function PastExecutions() {
                         <span
                           className={`severity-pill ${cve.severity.toLowerCase()}`}
                         >
-                          {cve.severity}
+                          {cve.severity} {cve.score}
                         </span>
 
                       </div>
