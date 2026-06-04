@@ -881,3 +881,21 @@ input[type="number"] {
   align-items: flex-start;
   gap: 20px;
 }
+
+.app-footer {
+  margin-top: 32px;
+  padding: 24px 0;
+  text-align: center;
+  font-size: 14px;
+  color: #667085;
+}
+
+.app-footer a {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.app-footer a:hover {
+  text-decoration: underline;
+}
