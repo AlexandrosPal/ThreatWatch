@@ -80,6 +80,17 @@ function App() {
         {activeTab === "executions" && (
           <PastExecutions />
         )}
+        
+        <footer className="app-footer">
+          Found a bug or have a feature request?{" "}
+          <a
+            href="https://github.com/AlexandrosPal/ThreatWatch/issues"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Open an issue on GitHub
+          </a>
+        </footer>
       </div>
     </div>
   );
