@@ -14,7 +14,7 @@ import java.time.Instant;
 
 @CrossOrigin(origins = "http://localhost:5173")
 @RestController
-@RequestMapping("/api/version")
+@RequestMapping("/api/version/check")
 public class ReleasesController {
 
     private final GitHubRestService githubRestService;

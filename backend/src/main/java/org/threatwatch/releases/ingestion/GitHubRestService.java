@@ -7,6 +7,7 @@ import org.springframework.web.client.RestClient;
 import org.threatwatch.loggers.AppLogger;
 import org.threatwatch.loggers.LogEvents;
 import org.threatwatch.releases.ReleasesResponseDto;
+import org.threatwatch.releases.VersionService;
 import tools.jackson.databind.JsonNode;
 
 import java.util.HashMap;
@@ -15,11 +16,13 @@ import java.util.HashMap;
 public class GitHubRestService {
 
     private final RestClient githubRestClient;
+    private final VersionService versionService;
 
     private static final AppLogger appLogger = new AppLogger(LoggerFactory.getLogger(GitHubRestService.class));
 
-    public GitHubRestService(@Qualifier("githubRestClient") RestClient githubRestClient) {
+    public GitHubRestService(@Qualifier("githubRestClient") RestClient githubRestClient, VersionService versionService) {
         this.githubRestClient = githubRestClient;
+        this.versionService = versionService;
     }
 
     public ReleasesResponseDto retrieveLatestRelease() {
@@ -36,8 +39,11 @@ public class GitHubRestService {
                 .retrieve()
                 .body(JsonNode.class);
 
+        String currentVersion = versionService.getCurrentVersion();
         String latestVersion = response.path("name").asString();
 
-        return new ReleasesResponseDto(latestVersion);
+        boolean updateAvailable = versionService.updateAvailable(currentVersion, latestVersion);
+
+        return new ReleasesResponseDto(currentVersion, latestVersion, updateAvailable);
     }
 }
