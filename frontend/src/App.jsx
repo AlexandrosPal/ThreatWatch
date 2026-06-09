@@ -1,14 +1,30 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import SettingsForm from "./components/SettingsForm";
 import PastExecutions from "./components/PastExecutions";
 import { scanNow } from "./services/api";
 import "./App.css";
 import logo from "./assets/logo.svg";
+import { retrieveVersionCheck } from "./services/api";
 
 function App() {
   const [isScanning, setIsScanning] = useState(false);
   const [scanSuccess, setScanSuccess] = useState(false);
   const [activeTab, setActiveTab] = useState("basic");
+
+  const [versionInfo, setVersionInfo] = useState(null);
+
+  useEffect(() => {
+    async function loadVersionInfo() {
+      try {
+        const response = await retrieveVersionCheck();
+        setVersionInfo(response);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    loadVersionInfo();
+  }, []);
 
   const handleManualScan = async () => {
     try {
@@ -26,6 +42,26 @@ function App() {
 
   return (
     <div className="app-shell">
+      {
+        versionInfo?.updateAvailable && (
+          <div className="update-banner">
+
+            <span>
+              🚀 ThreatWatch {versionInfo.latestVersion} is available.
+              You're currently running {versionInfo.currentVersion}.
+            </span>
+
+            <a
+              href="https://github.com/AlexandrosPal/ThreatWatch/releases"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              View release notes
+            </a>
+
+          </div>
+        )
+      }
       <div className="page">
         <header className="page-header">
           <div className="title-row">

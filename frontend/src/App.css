@@ -899,3 +899,45 @@ input[type="number"] {
 .app-footer a:hover {
   text-decoration: underline;
 }
+
+.update-banner {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  gap: 20px;
+
+  background: #eff8ff;
+  border: 1px solid #b2ddff;
+  color: #175cd3;
+
+  padding: 14px 24px;
+
+  border-radius: 12px;
+  margin-bottom: 16px;
+
+  font-size: 14px;
+}
+
+.update-banner a {
+  color: #175cd3;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.update-banner a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+
+  .update-banner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+}
