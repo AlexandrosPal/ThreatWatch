@@ -76,3 +76,10 @@ export async function getPastExecutions(limit = 5) {
   const data = await response.json();
   return data.response;
 }
+
+export async function retrieveVersionCheck() {
+  const response = await fetch("http://localhost:8080/api/version/check");
+  const data = await response.json();
+
+  return data.response;
+}
