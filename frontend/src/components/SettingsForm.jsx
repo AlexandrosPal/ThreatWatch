@@ -789,7 +789,13 @@ export default function SettingsForm({ activeTab }) {
                 onChange={(e) => setMinimumSeverityScore(e.target.value)}
                 className="severity-slider"
                 style={{
-                  background: `linear-gradient(to right, ${color} 0%, ${color} ${percent}%, #e5e7eb ${percent}%, #e5e7eb 100%)`,
+                  background: `linear-gradient(
+                    to right,
+                    ${color} 0%,
+                    ${color} ${percent}%,
+                    var(--slider-track) ${percent}%,
+                    var(--slider-track) 100%
+                  )`,
                 }}
               />
 
