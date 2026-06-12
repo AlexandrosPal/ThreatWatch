@@ -25,7 +25,7 @@ public class RestClientConfig {
     @Bean("githubRestClient")
     public RestClient githubRestClient(RestClient.Builder builder) {
         return builder
-                .baseUrl("https://api.github.com")
+                .baseUrl("https://raw.githubusercontent.com")
                 .defaultHeader("Content-Type", "application/json")
                 .build();
     }

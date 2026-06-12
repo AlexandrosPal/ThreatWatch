@@ -10,8 +10,11 @@ function App() {
   const [isScanning, setIsScanning] = useState(false);
   const [scanSuccess, setScanSuccess] = useState(false);
   const [activeTab, setActiveTab] = useState("basic");
-
   const [versionInfo, setVersionInfo] = useState(null);
+  const [darkMode, setDarkMode] = useState(() => {
+    const savedTheme = localStorage.getItem("theme");
+    return savedTheme === "dark";
+  });
 
   useEffect(() => {
     async function loadVersionInfo() {
@@ -25,6 +28,15 @@ function App() {
 
     loadVersionInfo();
   }, []);
+
+  useEffect(() => {
+    document.body.classList.toggle("dark", darkMode);
+
+    localStorage.setItem(
+      "theme",
+      darkMode ? "dark" : "light"
+    );
+  }, [darkMode]);
 
   const handleManualScan = async () => {
     try {
@@ -73,6 +85,13 @@ function App() {
             <p>Self-hosted vulnerability monitoring settings</p>
 
             <div className="header-actions">
+              <button
+                className="theme-button"
+                onClick={() => setDarkMode(!darkMode)}
+              >
+                {darkMode ? "☀️" : "🌙"}
+              </button>
+              
               <button
                 className="primary-button"
                 onClick={handleManualScan}
