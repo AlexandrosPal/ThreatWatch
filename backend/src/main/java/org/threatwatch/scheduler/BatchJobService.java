@@ -98,7 +98,6 @@ public class BatchJobService {
         String publishStartDatetime = dateTimeFormatter.format(rawPublishStartDatetime);
         Set<String> products = settings.getProductsSelected();
 
-//        StringBuilder cveListHtml = new StringBuilder();
         String html = emailNotificationSender.loadHtmlTemplate();
         Set<String> emails = settings.getEmails();
         Set<String> cveIdsToSend = new HashSet<>();

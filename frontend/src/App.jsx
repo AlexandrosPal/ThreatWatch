@@ -64,7 +64,7 @@ function App() {
             </span>
 
             <a
-              href="https://github.com/AlexandrosPal/ThreatWatch/releases"
+              href="https://github.com/AlexandrosPal/ThreatWatch/"
               target="_blank"
               rel="noopener noreferrer"
             >
