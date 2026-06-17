@@ -1087,26 +1087,32 @@ body.dark .execution-status.running {
 }
 
 .update-banner {
-  position: sticky;
-  top: 0;
-  z-index: 1000;
+    max-width: 900px;
+    margin: auto auto 3rem auto;
+    padding: 1rem 1.25rem;
+    border-radius: 16px;
+    background: rgba(37,99,235,0.1);
+    border: 1px solid rgba(37,99,235,0.3);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
 
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.update-banner-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
 
-  gap: 20px;
+.update-banner-title {
+    font-weight: 600;
+    color: #fff;
+}
 
-  background: #eff8ff;
-  border: 1px solid #b2ddff;
-  color: #175cd3;
-
-  padding: 14px 24px;
-
-  border-radius: 12px;
-  margin-bottom: 16px;
-
-  font-size: 14px;
+.update-banner-subtitle {
+    color: #94a3b8;
+    font-size: 0.9rem;
 }
 
 .update-banner a {
