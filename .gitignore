@@ -1,4 +1,5 @@
 backend/.env
+*.cmd
 
 # Vite
 frontend/.vite/
