@@ -1,8 +1,12 @@
-const BASE_URL_BATCH = "http://localhost:8080/api/batch/run";
-const BASE_URL_SETTINGS = "http://localhost:8080/api/settings";
-const BASE_URL_EMAIL = "http://localhost:8080/api/settings/email/connection";
-const BASE_URL_NVD_CONNECTION = "http://localhost:8080/api/settings/nvd/connection"
-const BASE_URL_PAST_EXECUTIONS = "http://localhost:8080/api/past-executions"
+const API_BASE = "http://localhost:8080/api";
+
+const BASE_URL_BATCH = `${API_BASE}/batch/run`;
+const BASE_URL_SETTINGS = `${API_BASE}/settings`;
+const BASE_URL_EMAIL = `${API_BASE}/settings/email/connection`;
+const BASE_URL_NVD_CONNECTION = `${API_BASE}/settings/nvd/connection`;
+const BASE_URL_PAST_EXECUTIONS = `${API_BASE}/past-executions`;
+const BASE_URL_NOTIFICATION_TEST = `${API_BASE}/settings/notification/test`;
+const BASE_URL_VERSION = `${API_BASE}/version/check`;
 
 export async function scanNow() {
   const res = await fetch(BASE_URL_BATCH, {
@@ -24,6 +28,27 @@ export async function testEmailConnection() {
 
   if (!response.ok) {
     throw new Error("Failed to test email connection");
+  }
+
+  const data = await response.json();
+  return data.response;
+}
+
+export async function testNotification(channel, webhook = null) {
+  let response;
+
+  if (webhook == null) {
+    response = await fetch(
+      `${BASE_URL_NOTIFICATION_TEST}?channel=${channel}`
+    );
+  } else {
+    response = await fetch(
+      `${BASE_URL_NOTIFICATION_TEST}?channel=${channel}&webhookUrl=${encodeURIComponent(webhook)}`
+    );
+  }
+
+  if (!response.ok) {
+    throw new Error("Failed to test notification");
   }
 
   const data = await response.json();

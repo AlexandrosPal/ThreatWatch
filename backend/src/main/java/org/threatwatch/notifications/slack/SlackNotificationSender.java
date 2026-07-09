@@ -119,4 +119,16 @@ public class SlackNotificationSender implements NotificationSender {
                     .toBodilessEntity();
         }
     }
+
+    @Override
+    public Boolean testNotification(NotificationRequestDto request) {
+        restClient
+                .post()
+                .uri(request.getTestWebhookUrl())
+                .body(Map.of("text", request.getMessage()))
+                .retrieve()
+                .toBodilessEntity();
+
+        return true;
+    }
 }

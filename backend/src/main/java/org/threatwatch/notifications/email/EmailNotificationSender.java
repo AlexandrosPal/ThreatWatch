@@ -556,4 +556,15 @@ public class EmailNotificationSender implements NotificationSender {
                 request.getMessage()
         );
     }
+
+    @Override
+    public Boolean testNotification(NotificationRequestDto request) throws MessagingException, UnsupportedEncodingException {
+        sendHtmlEmail(
+                request.getEmails(),
+                request.getTitle(),
+                request.getMessage()
+        );
+
+        return true;
+    }
 }

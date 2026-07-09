@@ -116,4 +116,16 @@ public class DiscordNotificationSender implements NotificationSender {
                     .toBodilessEntity();
         }
     }
+
+    @Override
+    public Boolean testNotification(NotificationRequestDto request) {
+        restClient
+                .post()
+                .uri(request.getTestWebhookUrl())
+                .body(Map.of("content", request.getMessage()))
+                .retrieve()
+                .toBodilessEntity();
+
+        return true;
+    }
 }
