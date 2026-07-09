@@ -174,7 +174,7 @@ public class SettingsServiceImpl implements SettingsService {
 
     private void updateDiscordWebhookUrls(String discordWebhookUrl) {
         if (discordWebhookUrl != null) {
-            Boolean isMember = redisTemplate.opsForSet().isMember(SETTINGS_PRODUCTS_SELECTED_KEY, discordWebhookUrl);
+            Boolean isMember = redisTemplate.opsForSet().isMember(SETTINGS_DISCORD_WEBHOOK_URL_KEY, discordWebhookUrl);
             if (Boolean.TRUE.equals(isMember)) {
                 redisTemplate.opsForSet().remove(SETTINGS_DISCORD_WEBHOOK_URL_KEY, discordWebhookUrl);
                 appLogger.info(LogEvents.SETTINGS_UPDATE, "Removed Discord webhook URL from list", new LinkedHashMap<>(Map.of("discordWebhookUrl", discordWebhookUrl)));

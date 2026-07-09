@@ -4,6 +4,7 @@ import {
   getSettings,
   patchSettings,
   testNvdConnection,
+  testNotification
 } from "../services/api";
 
 function formatHoursFromMinutes(minutes) {
@@ -107,6 +108,9 @@ export default function SettingsForm({ activeTab }) {
   const [supportedNotificationChannels, setSupportedNotificationChannels] = useState([]);
   const [selectedNotificationChannels, setSelectedNotificationChannels] = useState([]);
   const [selectedNotificationInput, setSelectedNotificationInput] = useState("");
+
+  const [testingNotificationChannel, setTestingNotificationChannel] = useState(null);
+  const [notificationTestResult, setNotificationTestResult] = useState({});
 
   const [webhooks, setWebhooks] = useState({
     discord: [],
@@ -245,6 +249,28 @@ export default function SettingsForm({ activeTab }) {
     } catch (err) {
       console.error(err);
       alert("Failed to remove notification channel");
+    }
+  }
+
+  async function handleTestNotification(channel, webhook = null, key = channel) {
+    try {
+      setTestingNotificationChannel(key);
+
+      await testNotification(channel.toUpperCase(), webhook);
+
+      setNotificationTestResult(prev => ({
+          ...prev,
+          [key]: true
+      }));
+    } catch (err) {
+      console.error(err);
+
+      setNotificationTestResult(prev => ({
+          ...prev,
+          [key]: false
+      }));
+    } finally {
+      setTestingNotificationChannel(null);
     }
   }
 
@@ -581,9 +607,35 @@ export default function SettingsForm({ activeTab }) {
           {webhooks[channel].length === 0 ? (
             <p className="muted-text">No webhooks added yet.</p>
           ) : (
-            webhooks[channel].map((url) => (
+            webhooks[channel].map((url, index) => (
               <div key={url} className="chip">
                 <span>{url}</span>
+                <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={() =>
+                        handleTestNotification(
+                            channel,
+                            url,
+                            `${channel}-${index}`
+                        )
+                    }
+                    disabled={
+                        testingNotificationChannel === `${channel}-${index}`
+                    }
+                >
+                    {testingNotificationChannel === `${channel}-${index}`
+                        ? "Sending..."
+                        : "Test"}
+                </button>
+
+                {notificationTestResult[`${channel}-${index}`] === true && (
+                    <span className="connection-result success">✓</span>
+                )}
+
+                {notificationTestResult[`${channel}-${index}`] === false && (
+                    <span className="connection-result error">✕</span>
+                )}
                 <button
                   className="chip-remove"
                   onClick={() => handleRemoveWebhook(channel, url)}
@@ -1057,6 +1109,7 @@ export default function SettingsForm({ activeTab }) {
                   </div>
 
                   <div className="connection-test-wrap">
+                    
                     <button
                       type="button"
                       className="secondary-button"
@@ -1072,6 +1125,29 @@ export default function SettingsForm({ activeTab }) {
 
                     {emailConnectionResult === false && (
                       <span className="connection-result error">Failed</span>
+                    )}
+
+                    <button
+                      type="button"
+                      className="secondary-button"
+                      onClick={() => handleTestNotification("email")}
+                      disabled={testingNotificationChannel === "email"}
+                    >
+                      {testingNotificationChannel === "email"
+                        ? "Sending..."
+                        : "Send test notification"}
+                    </button>
+
+                    {notificationTestResult.email === true && (
+                      <span className="connection-result success">
+                        Notification sent
+                      </span>
+                    )}
+
+                    {notificationTestResult.email === false && (
+                      <span className="connection-result error">
+                        Failed
+                      </span>
                     )}
                   </div>
                 </div>

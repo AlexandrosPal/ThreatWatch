@@ -8,6 +8,7 @@ public class NotificationRequestDto {
     private String message;
     private Set<String> emails;
     private Set<String> webhookUrls;
+    private String testWebhookUrl;
 
     public String getTitle() { return title; }
 
@@ -17,6 +18,8 @@ public class NotificationRequestDto {
 
     public Set<String> getWebhookUrls() { return webhookUrls; }
 
+    public String getTestWebhookUrl() { return testWebhookUrl; }
+
     public void setTitle(String title) { this.title = title; }
 
     public void setMessage(String message) { this.message = message; }
@@ -24,4 +27,6 @@ public class NotificationRequestDto {
     public void setEmails(Set<String> emails) { this.emails = emails; }
 
     public void setWebhookUrls(Set<String> webhookUrls) { this.webhookUrls = webhookUrls; }
+
+    public void setTestWebhookUrl(String testWebhookUrl) { this.testWebhookUrl = testWebhookUrl; }
 }
