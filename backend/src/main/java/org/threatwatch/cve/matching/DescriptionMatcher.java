@@ -24,7 +24,7 @@ public class DescriptionMatcher {
                 .replace(".\n", ". ")
                 .replace(". \n", ". ")
                 .replace("\n", " ")
-                .split(". "));
+                .split("\\. "));
 
         return  sentences.get(0).contains(" %s".format(keyword.toLowerCase()));
     }
