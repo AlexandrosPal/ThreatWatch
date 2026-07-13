@@ -3,6 +3,7 @@ package org.threatwatch.cve.matching;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,10 +11,11 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Service
 public class DescriptionMatcher {
     private <T> T loadJsonFile(String filePath, TypeReference<T> typeReference) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
-        InputStream is = new ClassPathResource("%s.json".format(filePath)).getInputStream();
+        InputStream is = new ClassPathResource(filePath + ".json").getInputStream();
 
         return mapper.readValue(is, typeReference);
     }
@@ -36,11 +38,11 @@ public class DescriptionMatcher {
     }
 
     public Boolean negativeKeywordMatch(String text, String keyword) throws IOException {
-        List<String> negativeKeyphrases = loadJsonFile("matching/negative_keyphrases", new TypeReference<List<String>>() {});
+        List<String> negativeKeywords = loadJsonFile("matching/negative_keyphrases", new TypeReference<List<String>>() {});
         String description = text.toLowerCase();
         String product = " %s".format(keyword.toLowerCase());
 
-        for (String phrase : negativeKeyphrases) {
+        for (String phrase : negativeKeywords) {
             String pattern =
                     "((?:\\S+[ \\t]+){0,4})"
                     + Pattern.quote(phrase)
@@ -50,6 +52,60 @@ public class DescriptionMatcher {
 
             while (matcher.find()) {
                 String after = " %s".format(matcher.group(2).trim());
+                if (after.contains(product)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public Boolean keywordMatch(String text, String keyword) throws IOException {
+        List<String> keywords = loadJsonFile("matching/keyphrases", new TypeReference<List<String>>() {});
+        String description = text.toLowerCase();
+        String product = " %s".format(keyword.toLowerCase());
+
+        for (String phrase : keywords) {
+            String pattern =
+                    "((?:\\S+[ \\t]+){0,4})"
+                            + Pattern.quote(phrase)
+                            + "((?:[ \\t]+\\S+){0,4})";
+            Pattern compiledPattern = Pattern.compile(pattern);
+            Matcher matcher = compiledPattern.matcher(description);
+
+            while (matcher.find()) {
+                String before = " %s".format(matcher.group(1).trim());
+                String after = " %s".format(matcher.group(2).trim());
+                if (before.contains(product)) {
+                    return true;
+                }
+                if (after.contains(product)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public Boolean boostedKeywordMatch(String text, String keyword) throws IOException {
+        List<String> boostedKeywords = loadJsonFile("matching/boosted_keyphrases", new TypeReference<List<String>>() {});
+        String description = text.toLowerCase();
+        String product = " %s".format(keyword.toLowerCase());
+
+        for (String phrase : boostedKeywords) {
+            String pattern =
+                    "((?:\\S+[ \\t]+){0,4})"
+                            + Pattern.quote(phrase)
+                            + "((?:[ \\t]+\\S+){0,4})";
+            Pattern compiledPattern = Pattern.compile(pattern);
+            Matcher matcher = compiledPattern.matcher(description);
+
+            while (matcher.find()) {
+                String before = " %s".format(matcher.group(1).trim());
+                String after = " %s".format(matcher.group(2).trim());
+                if (before.contains(product)) {
+                    return true;
+                }
                 if (after.contains(product)) {
                     return true;
                 }

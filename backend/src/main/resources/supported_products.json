@@ -1,0 +1,11 @@
+[
+  {"name": "Apache", "aliases": ["Apache"]},
+  {"name": "GitLab", "aliases": ["GitLab"]},
+  {"name": "Wordpress", "aliases": ["Wordpress", "WP"]},
+  {"name": "MySQL", "aliases": ["MySQL"]},
+  {"name": "N8N", "aliases": ["n8n"]},
+  {"name": "MongoDB", "aliases": ["MongoDB"]},
+  {"name": "PostgreSQL", "aliases": ["PostgreSQL"]},
+  {"name": "Redis", "aliases": ["Redis"]},
+  {"name": "NGINX", "aliases": ["NGINX"]}
+]
