@@ -5,6 +5,17 @@
 
 It delivers alerts from through multiple channels, like email, Discord, or Slack. It offers extensive customization when it comes to the products it monitors, polling intervals and control how CVEs are filtered, tracked and reported.
 
+## Why build it AI-free?
+**ThreatWatch** is designed to be a lightweight monitoring solution based on standard data or text parsers. 
+
+The data containing the CVE information either have specific CPE codes, matching intended products, or, in an early phase, contain only a text description of the vulnerability. 
+
+These descriptions follow recurring patterns and terminology, which can be interpreted using a simple deterministic rule-based matching engine tailored for the use case. 
+
+Using Artificial Intelligence for this solution, would significantly increase the application's complexity, resource requirements, and deployment size, thus disallowing the labeling of the tool as lightweight, while providing limited practical benefit.
+
+ThreatWatch demonstrates that carefully designed heuristics can effectively solve domain-specific problems without introducing unnecessary complexity.
+
 ## Features
 - CVE monitoring from NVD
 - Early vulnerability detection before full NVD enrichment
