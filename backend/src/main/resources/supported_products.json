@@ -1,5 +1,5 @@
 [
-  {"name": "Apache", "aliases": ["Apache"]},
+  {"name": "Apache", "aliases": ["Apache Tomcat", "Apache Kafka", "Apache HTTP server", "httpd"]},
   {"name": "GitLab", "aliases": ["GitLab"]},
   {"name": "Wordpress", "aliases": ["Wordpress", "WP"]},
   {"name": "MySQL", "aliases": ["MySQL"]},
