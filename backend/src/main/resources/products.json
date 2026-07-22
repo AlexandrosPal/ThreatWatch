@@ -187,7 +187,91 @@
       "displayName": "Redis: redisraft"
     }
   ],
-  "Apache": [
+  "Apache Kafka": [
+    {
+      "part": "a",
+      "vendor": "apache",
+      "product": "http_server",
+      "displayName": "Apache: HTTP Server"
+    },
+    {
+      "part": "a",
+      "vendor": "apache",
+      "product": "kafka",
+      "displayName": "Apache: Kafka"
+    }
+  ],
+  "Apache Tomcat": [
+    {
+      "part": "a",
+      "vendor": "apache",
+      "product": "http_server",
+      "displayName": "Apache: HTTP Server"
+    },
+    {
+      "part": "a",
+      "vendor": "apache",
+      "product": "kafka",
+      "displayName": "Apache: Kafka"
+    }
+  ],
+  "Apache HTTP server": [
+    {
+      "part": "a",
+      "vendor": "apache",
+      "product": "http_server",
+      "displayName": "Apache: HTTP Server"
+    },
+    {
+      "part": "a",
+      "vendor": "apache",
+      "product": "kafka",
+      "displayName": "Apache: Kafka"
+    }
+  ],
+  "Apache IotDB": [
+    {
+      "part": "a",
+      "vendor": "apache",
+      "product": "http_server",
+      "displayName": "Apache: HTTP Server"
+    },
+    {
+      "part": "a",
+      "vendor": "apache",
+      "product": "kafka",
+      "displayName": "Apache: Kafka"
+    }
+  ],
+  "Apache Fory": [
+    {
+      "part": "a",
+      "vendor": "apache",
+      "product": "http_server",
+      "displayName": "Apache: HTTP Server"
+    },
+    {
+      "part": "a",
+      "vendor": "apache",
+      "product": "kafka",
+      "displayName": "Apache: Kafka"
+    }
+  ],
+  "Apache Traffic Server": [
+    {
+      "part": "a",
+      "vendor": "apache",
+      "product": "http_server",
+      "displayName": "Apache: HTTP Server"
+    },
+    {
+      "part": "a",
+      "vendor": "apache",
+      "product": "kafka",
+      "displayName": "Apache: Kafka"
+    }
+  ],
+  "Apache Accumulo": [
     {
       "part": "a",
       "vendor": "apache",
