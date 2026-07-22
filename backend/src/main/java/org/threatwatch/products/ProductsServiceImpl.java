@@ -23,7 +23,7 @@ public class ProductsServiceImpl implements ProductsService {
 
     private Map<String, List<ProductModel>> loadProducts() throws IOException {
         ObjectMapper mapper = new ObjectMapper();
-        InputStream is = new ClassPathResource("products.json").getInputStream();
+        InputStream is = new ClassPathResource("supported_products.json").getInputStream();
 
         return mapper.readValue(is, new TypeReference<>() {});
     }

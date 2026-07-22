@@ -1,5 +1,11 @@
 [
-  {"name": "Apache", "aliases": ["Apache Tomcat", "Apache Kafka", "Apache HTTP server", "httpd"]},
+  {"name": "Apache Tomcat", "aliases": ["Apache Tomcat"]},
+  {"name": "Apache Kafka", "aliases": ["Apache Kafka"]},
+  {"name": "Apache HTTP server", "aliases": ["Apache HTTP server"]},
+  {"name": "Apache Accumulo", "aliases": ["Apache Accumulo"]},
+  {"name": "Apache Traffic Server", "aliases": ["Apache Traffic Server"]},
+  {"name": "Apache IoTDB", "aliases": ["Apache IoTDB"]},
+  {"name": "Apache Fory", "aliases": ["Apache Fory"]},
   {"name": "GitLab", "aliases": ["GitLab"]},
   {"name": "Wordpress", "aliases": ["Wordpress", "WP"]},
   {"name": "MySQL", "aliases": ["MySQL"]},
