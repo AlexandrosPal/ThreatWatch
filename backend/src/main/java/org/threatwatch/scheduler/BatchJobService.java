@@ -4,6 +4,7 @@ import jakarta.mail.MessagingException;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.threatwatch.cve.matching.ProductMatcher;
 import org.threatwatch.executions.PastExecutionService;
 import org.threatwatch.executions.PastExecutionStatus;
 import org.threatwatch.notifications.NotificationRequestDto;
@@ -44,6 +45,7 @@ public class BatchJobService {
     private final CveParserService cveParserService;
     private final CveStateService cveStateService;
     private final PastExecutionService pastExecutionService;
+    private final ProductMatcher productMatcherService;
 
     private static final AppLogger appLogger = new AppLogger(LoggerFactory.getLogger(BatchJobService.class));
 
@@ -53,7 +55,7 @@ public class BatchJobService {
     @Value("${backend.nvd.requests.interval}")
     private int nvdReqeustsInterval;
 
-    public BatchJobService(List<NotificationSender> senderList, EmailNotificationSender emailNotificationSender, DiscordNotificationSender discordNotificationSender, SlackNotificationSender slackNotificationSender, TeamsNotificationSender teamsNotificationSender, SettingsService settingsService, NvdRestService nvdRestService, CveParserService cveParserService, CveStateService cveStateService, PastExecutionService pastExecutionService) {
+    public BatchJobService(List<NotificationSender> senderList, EmailNotificationSender emailNotificationSender, DiscordNotificationSender discordNotificationSender, SlackNotificationSender slackNotificationSender, TeamsNotificationSender teamsNotificationSender, SettingsService settingsService, NvdRestService nvdRestService, CveParserService cveParserService, CveStateService cveStateService, PastExecutionService pastExecutionService, ProductMatcher productMatcherService) {
         this.senders = senderList.stream()
                 .collect(Collectors.toMap(NotificationSender::supports, s -> s));
         this.emailNotificationSender = emailNotificationSender;
@@ -65,6 +67,7 @@ public class BatchJobService {
         this.cveParserService = cveParserService;
         this.cveStateService = cveStateService;
         this.pastExecutionService = pastExecutionService;
+        this.productMatcherService = productMatcherService;
     }
 
     private boolean descriptionMatchesProduct(String description, String product) {
@@ -124,7 +127,12 @@ public class BatchJobService {
                 boolean outsideSeverityThreshold = !earlyCve && Float.parseFloat(parsedCve.getScore()) < Float.parseFloat(settings.getSeverityThreshold());
                 boolean earlyAlertsEnabled = Boolean.parseBoolean(settings.getEarlyAlerts());
 
-                if ((!descriptionMatchesProduct(description, product) || !referencesMatchProduct(references, product)) || cveAlreadyPresent || isPastCve || (outsideSeverityThreshold && !earlyCve) || (earlyCve && !earlyAlertsEnabled)) {
+                if (
+                        productMatcherService.extractMainProduct(description).equalsIgnoreCase(product) ||
+                        cveAlreadyPresent ||
+                        isPastCve ||
+                        (outsideSeverityThreshold && !earlyCve) ||
+                        (earlyCve && !earlyAlertsEnabled)) {
                     continue;
                 }
 
