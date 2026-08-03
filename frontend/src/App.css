@@ -1133,3 +1133,13 @@ body.dark .execution-status.running {
   }
 
 }
+
+.execution-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+#execution-filter {
+    width: 180px;
+}

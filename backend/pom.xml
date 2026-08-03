@@ -10,7 +10,7 @@
     </parent>
     <groupId>org.threatwatch</groupId>
     <artifactId>ThreatWatch</artifactId>
-    <version>0.16.6</version>
+    <version>0.17.0</version>
     <name>ThreatWatch</name>
     <description>ThreatWatch</description>
     <url/>

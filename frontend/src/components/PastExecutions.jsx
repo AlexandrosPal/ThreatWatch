@@ -7,6 +7,7 @@ function PastExecutions() {
   const [loading, setLoading] = useState(true);
   const [expandedExecution, setExpandedExecution] = useState(null);
   const [limit, setLimit] = useState(5);
+  const [filter, setFilter] = useState("all");
 
   useEffect(() => {
 
@@ -69,6 +70,17 @@ function PastExecutions() {
     return products;
   }
 
+  const filteredExecutions = executions.filter((execution) => {
+    switch (filter) {
+      case "vulnerabilities":
+        return execution.totalCves > 0;
+      case "clean":
+        return execution.totalCves === 0;
+      default:
+        return true;
+    }
+  });
+
   if (loading) {
     return (
       <div className="card">
@@ -110,29 +122,38 @@ function PastExecutions() {
             }
             className="execution-limit-select"
           >
-
             <option value={5}>5</option>
             <option value={10}>10</option>
             <option value={15}>15</option>
             <option value={20}>20</option>
+          </select>
 
+          <label htmlFor="execution-filter">
+            Only
+          </label>
+
+          <select
+            id="execution-filter"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            className="execution-limit-select"
+          >
+            <option value="all">All</option>
+            <option value="vulnerabilities">With vulnerabilities</option>
+            <option value="clean">Clean scans</option>
           </select>
 
         </div>
 
       </div>
+
       <div className="execution-list">
 
-        {executions.map((execution, index) => {
+        {filteredExecutions.map((execution, index) => {
 
-          const severityCounts =
-            getSeverityCounts(execution.cves);
-
-          const products =
-            getProducts(execution.cves);
-
-          const isExpanded =
-            expandedExecution === index;
+          const severityCounts = getSeverityCounts(execution.cves);
+          const products = getProducts(execution.cves);
+          const isExpanded = expandedExecution === index;
 
           const executionStatus = execution.status || "FINISHED";
           const statusIcons = {
@@ -142,11 +163,7 @@ function PastExecutions() {
           };
 
           return (
-
-            <div
-              key={execution.timestamp}
-              className="card execution-card"
-            >
+            <div key={execution.timestamp} className="card execution-card">
 
               <div className="execution-header">
                 <div className="execution-card-header">
