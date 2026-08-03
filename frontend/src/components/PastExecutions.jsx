@@ -129,14 +129,14 @@ function PastExecutions() {
           </select>
 
           <label htmlFor="execution-filter">
-            Filter
+            Only
           </label>
 
           <select
             id="execution-filter"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="execution-filter-select"
+            className="execution-limit-select"
           >
             <option value="all">All</option>
             <option value="vulnerabilities">With vulnerabilities</option>
