@@ -119,7 +119,6 @@ public class BatchJobService {
                 ParsedCveModel parsedCve = cveParserService.parseCve(cve);
                 String cveId = parsedCve.getCveId();
                 String description = parsedCve.getDescription();
-                List<String> references = parsedCve.getReferences();
 
                 boolean cveAlreadyPresent = cveIdsToSend.contains(cveId);
                 boolean isPastCve = !cveStateService.isNewCve(cveId);

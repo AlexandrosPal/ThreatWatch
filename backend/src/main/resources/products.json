@@ -252,9 +252,6 @@
   "GitLab": [
 
   ],
-  "WordPress": [
-
-  ],
   "Elasticsearch": [
 
   ],
@@ -271,6 +268,9 @@
 
   ],
   "Grafana": [
+
+  ],
+  "N8N": [
 
   ]
 }
