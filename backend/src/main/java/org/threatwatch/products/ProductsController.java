@@ -7,8 +7,7 @@ import org.threatwatch.cve.matching.ProductMatcher;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.List;
-import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @CrossOrigin(origins = "http://localhost:5173")
@@ -27,7 +26,7 @@ public class ProductsController {
     @GetMapping
     public ResponseEntity<ApiResponseDto> retrieveProducts() {
 
-        Map<String, List<ProductModel>> supportedProducts = productsService.getProducts();
+        Set<String> supportedProducts = productsService.getProducts();
 
         return ResponseEntity.ok(new ApiResponseDto(
                 Instant.now(),
@@ -40,7 +39,7 @@ public class ProductsController {
     @GetMapping("/extract")
     public ResponseEntity<ApiResponseDto> extractProduct(@RequestBody String text) throws IOException {
 
-        String product = productMatcherService.extractMainProduct(text);
+        String product = productMatcherService.extractMainProduct(text, productsService.getProducts());
 
         return ResponseEntity.ok(new ApiResponseDto(
                 Instant.now(),

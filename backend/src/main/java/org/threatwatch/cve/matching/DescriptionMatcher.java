@@ -51,7 +51,7 @@ public class DescriptionMatcher {
             Matcher matcher = compiledPattern.matcher(description);
 
             while (matcher.find()) {
-                String after = " %s".format(matcher.group(2).trim());
+                String after = " " + matcher.group(2).trim();
                 if (after.contains(product)) {
                     return true;
                 }

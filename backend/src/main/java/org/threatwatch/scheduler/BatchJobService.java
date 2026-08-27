@@ -127,7 +127,7 @@ public class BatchJobService {
                 boolean earlyAlertsEnabled = Boolean.parseBoolean(settings.getEarlyAlerts());
 
                 if (
-                        productMatcherService.extractMainProduct(description).equalsIgnoreCase(product) ||
+                        productMatcherService.extractMainProduct(description, products).equalsIgnoreCase(product) ||
                         cveAlreadyPresent ||
                         isPastCve ||
                         (outsideSeverityThreshold && !earlyCve) ||
