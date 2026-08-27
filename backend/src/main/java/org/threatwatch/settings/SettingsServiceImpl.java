@@ -239,7 +239,7 @@ public class SettingsServiceImpl implements SettingsService {
                 .map(SettingsServiceImpl::toTitleCase)
                 .collect(Collectors.toSet());
 
-        Set<String> supportedProducts = productsService.getProducts().keySet();
+        Set<String> supportedProducts = productsService.getProducts();
         Set<String> productsSelected = redisTemplate.opsForSet().members(SETTINGS_PRODUCTS_SELECTED_KEY);
 
         String emailProviderHost = redisTemplate.opsForValue().get(SETTINGS_EMAIL_PROVIDER_HOST_KEY);

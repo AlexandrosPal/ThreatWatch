@@ -11,19 +11,21 @@ import org.threatwatch.loggers.LogEvents;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductsServiceImpl implements ProductsService {
 
-    private Map<String, List<ProductModel>> supportedProducts;
+    private List<HashMap<String, Object>> supportedProducts;
 
     private static final AppLogger appLogger = new AppLogger(LoggerFactory.getLogger(ProductsServiceImpl.class));
 
-    private Map<String, List<ProductModel>> loadProducts() throws IOException {
+    private List<HashMap<String, Object>> loadProducts() throws IOException {
         ObjectMapper mapper = new ObjectMapper();
-        InputStream is = new ClassPathResource("products.json").getInputStream();
+        InputStream is = new ClassPathResource("supported_products.json").getInputStream();
 
         return mapper.readValue(is, new TypeReference<>() {});
     }
@@ -39,18 +41,22 @@ public class ProductsServiceImpl implements ProductsService {
     }
 
     @Override
-    public Map<String, List<ProductModel>> getProducts() {
-        return supportedProducts;
+    public Set<String> getProducts() {
+        return this.supportedProducts.stream()
+                .map(prod -> (String) prod.get("name"))
+                .collect(Collectors.toSet());
     }
 
     public boolean isSupportedProduct(String product) {
-        return this.supportedProducts.keySet().stream()
-                .anyMatch(p -> p.equalsIgnoreCase(product));
+        return this.supportedProducts.stream()
+                .map(prod -> (String) prod.get("name"))
+                .anyMatch(name -> name.equalsIgnoreCase(product));
     }
 
     public String normalizeProduct(String product) {
-        return this.supportedProducts.keySet().stream()
-                .filter(p -> p.equalsIgnoreCase(product))
+        return this.supportedProducts.stream()
+                .map(prod -> (String) prod.get("name"))
+                .filter(name -> name.equalsIgnoreCase(product))
                 .findFirst()
                 .orElseThrow(() ->
                         new IllegalArgumentException("Unsupported product: " + product)

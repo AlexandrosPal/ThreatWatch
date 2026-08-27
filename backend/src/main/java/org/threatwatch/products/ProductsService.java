@@ -1,11 +1,10 @@
 package org.threatwatch.products;
 
-import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 public interface ProductsService {
 
-    public Map<String, List<ProductModel>> getProducts();
+    public Set<String> getProducts();
     public boolean isSupportedProduct(String product);
     public String normalizeProduct(String product);
 

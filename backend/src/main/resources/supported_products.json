@@ -3,11 +3,16 @@
   {"name": "Apache Kafka", "aliases": ["Apache Kafka"]},
   {"name": "Apache HTTP server", "aliases": ["Apache HTTP server"]},
   {"name": "GitLab", "aliases": ["GitLab"]},
-  {"name": "Wordpress", "aliases": ["Wordpress", "WP"]},
   {"name": "MySQL", "aliases": ["MySQL"]},
-  {"name": "N8N", "aliases": ["n8n"]},
+  {"name": "N8N", "aliases": ["N8N"]},
   {"name": "MongoDB", "aliases": ["MongoDB"]},
   {"name": "PostgreSQL", "aliases": ["PostgreSQL"]},
   {"name": "Redis", "aliases": ["Redis"]},
-  {"name": "NGINX", "aliases": ["NGINX"]}
+  {"name": "nginx", "aliases": ["nginx"]},
+  {"name": "Elasticsearch", "aliases": ["Elasticsearch"]},
+  {"name": "RabbitMQ", "aliases": ["RabbitMQ"]},
+  {"name": "ActiveMQ", "aliases": ["ActiveMQ"]},
+  {"name": "Keycloak", "aliases": ["Keycloak"]},
+  {"name": "Caddy", "aliases": ["Caddy"]},
+  {"name": "Grafana", "aliases": ["Grafana"]}
 ]
