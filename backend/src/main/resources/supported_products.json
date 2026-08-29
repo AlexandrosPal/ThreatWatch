@@ -5,7 +5,7 @@
   {"name": "GitLab", "aliases": ["GitLab"]},
   {"name": "MySQL", "aliases": ["MySQL"]},
   {"name": "N8N", "aliases": ["N8N"]},
-  {"name": "MongoDB", "aliases": ["MongoDB"]},
+  {"name": "MongoDB", "aliases": ["MongoDB", "MongoSQL"]},
   {"name": "PostgreSQL", "aliases": ["PostgreSQL"]},
   {"name": "Redis", "aliases": ["Redis"]},
   {"name": "nginx", "aliases": ["nginx"]},
