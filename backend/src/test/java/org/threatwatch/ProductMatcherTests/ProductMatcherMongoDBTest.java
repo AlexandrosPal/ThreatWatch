@@ -42,7 +42,7 @@ public class ProductMatcherMongoDBTest {
     @Test
     void MongoDBTestOne() throws IOException {
         String description = "When mongosqld is configured with a client certificate authority file, the listener requests a client certificate during the TLS handshake but does not require one, so a client that presents no certificate is still accepted. In deployments that rely on client certificates as the sole means of identifying users, a remote party with network access to the listener can therefore establish a session and read the MongoDB data exposed through the connector.";
-        
+
         Assertions.assertTrue(productMatcherService.extractMainProduct(description, products).equalsIgnoreCase("MongoDB"));
     }
 
