@@ -13,7 +13,7 @@ import java.util.*;
 public class ProductMatcher {
     DescriptionMatcher descriptionMatcher = new DescriptionMatcher();
 
-    public ProductMatcher(DescriptionMatcher descriptionMatcher) {
+    public ProductMatcher() {
         this.descriptionMatcher = descriptionMatcher;
     }
 
@@ -31,7 +31,7 @@ public class ProductMatcher {
                 .filter(product -> selectedProducts.contains(product.get("name")))
                 .toList();
 
-        for (Map<String, Object> productInfo : products) {
+        for (Map<String, Object> productInfo : filtered) {
             int score = 0;
             List<String> aliases = (List<String>) productInfo.get("aliases");
             for (String alias : aliases) {
@@ -39,10 +39,10 @@ public class ProductMatcher {
                     score += 5;
                 }
                 if (this.descriptionMatcher.negativeKeywordMatch(text, alias)) {
-                    score -= 10;
+                    score -= 15;
                 }
                 if (this.descriptionMatcher.boostedKeywordMatch(text, alias)) {
-                    score += 10;
+                    score += 15;
                 }
                 if (this.descriptionMatcher.insideFirstWords(text, alias)) {
                     score += 15;
